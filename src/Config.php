@@ -18,11 +18,12 @@ final class Config
         date_default_timezone_set('Europe/Amsterdam');
 
         $defaults = [
-            'APP_BASE_URL' => 'https://www.grippartner.nl',
+            // stopmetwilskracht branch: actiesite defaults (override in config.local.php if needed)
+            'APP_BASE_URL' => 'https://www.stopmetwilskracht.nl',
             // action = noindex + canonical naar CANONICAL_ORIGIN; ORDER_URL voor CTAs
-            'SITE_MODE' => 'full',
-            'CANONICAL_ORIGIN' => '',
-            'ORDER_URL' => '',
+            'SITE_MODE' => 'action',
+            'CANONICAL_ORIGIN' => 'https://www.grippartner.nl',
+            'ORDER_URL' => 'https://www.grippartner.nl/bestellen.php',
             'APP_ENV' => 'production',
             'APP_DEBUG' => false,
             'DB_HOST' => '127.0.0.1',
