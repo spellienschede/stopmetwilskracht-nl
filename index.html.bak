@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D2TE99HQZQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-D2TE99HQZQ');
+  </script>
+  <meta charset="utf-8" />
+  <title>Grippartner – Wekelijkse accountability tips</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Ontvang elke week een praktische tip van Grippartner. Gratis. Direct toepasbaar." />
+  <style>
+    :root{
+      --bg:#070A12;
+      --panel:#0E1426;
+      --panel2:#0B1020;
+      --text:#EAF0FF;
+      --muted:#B8C1DA;
+      --muted2:#93A0C6;
+      --line:rgba(255,255,255,.08);
+      --accent:#7C5CFF;
+      --accent2:#22D3EE;
+      --ok:#22C55E;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --radius: 22px;
+      --radius2: 16px;
+      --max: 900px;
+      --max-wide: 1100px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(124,92,255,.25), transparent 55%),
+                  radial-gradient(900px 500px at 90% 30%, rgba(34,211,238,.18), transparent 55%),
+                  radial-gradient(800px 500px at 50% 110%, rgba(124,92,255,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      line-height:1.55;
+      min-height:100vh;
+    }
+    a{color:inherit; text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .hero-header{
+      position: relative;
+      min-height: 500px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    @media (min-width: 768px) {
+      .hero-header {
+        min-height: 560px;
+      }
+    }
+    .hero-header-bg{
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .hero-header-bg img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 75% center;
+    }
+    .hero-header-overlay{
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(90deg, rgba(7,10,18,.95) 0%, rgba(7,10,18,.85) 25%, rgba(7,10,18,.4) 55%, rgba(7,10,18,.1) 75%, transparent 100%),
+        linear-gradient(180deg, transparent 0%, transparent 70%, rgba(7,10,18,.6) 90%, rgba(7,10,18,1) 100%);
+    }
+    @media (max-width: 767px) {
+      .hero-header-overlay {
+        background: linear-gradient(180deg, rgba(7,10,18,.3) 0%, rgba(7,10,18,.6) 40%, rgba(7,10,18,.9) 75%, rgba(7,10,18,1) 100%);
+      }
+      .hero-header-bg img {
+        object-position: 70% top;
+      }
+    }
+    .hero-header-content{
+      position: relative;
+      z-index: 1;
+      max-width: var(--max-wide);
+      margin: 0 auto;
+      padding: 4rem 1.5rem 5rem;
+      width: 100%;
+    }
+    @media (min-width: 768px) {
+      .hero-header-content {
+        padding: 5rem 2rem 6rem;
+        max-width: 50%;
+        margin: 0;
+        margin-left: max(2rem, calc((100vw - var(--max-wide)) / 2 + 2rem));
+      }
+    }
+    @media (min-width: 1200px) {
+      .hero-header-content {
+        margin-left: max(3rem, calc((100vw - var(--max-wide)) / 2));
+      }
+    }
+    .hero-header-name{
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 1.25rem;
+      line-height: 1.05;
+      text-shadow: 0 2px 20px rgba(0,0,0,.5);
+    }
+    @media (min-width: 768px) {
+      .hero-header-name {
+        font-size: 3.5rem;
+      }
+    }
+    @media (min-width: 1024px) {
+      .hero-header-name {
+        font-size: 4rem;
+      }
+    }
+    .hero-header-tagline{
+      font-size: 1.1rem;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 38ch;
+      margin-bottom: 2rem;
+      text-shadow: 0 1px 10px rgba(0,0,0,.5);
+    }
+    @media (min-width: 768px) {
+      .hero-header-tagline {
+        font-size: 1.2rem;
+      }
+    }
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding: 0 24px 80px;
+    }
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(14px);
+      background: rgba(7,10,18,.65);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar-inner{
+      max-width:var(--max);
+      margin:0 auto;
+      padding: 16px 24px;
+      display:flex; align-items:center; justify-content:center;
+      gap:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      font-weight:800; font-size:20px; letter-spacing:.2px;
+    }
+    .brand .dot{
+      width:12px; height:12px; border-radius:999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 6px rgba(124,92,255,.12);
+    }
+    .section{
+      margin-top: 60px;
+    }
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+      padding: 40px;
+      text-align:left;
+      margin-bottom:24px;
+    }
+    h2{
+      margin:0 0 20px;
+      font-size: 32px;
+      letter-spacing:-.5px;
+      font-weight: 800;
+    }
+    h3{
+      margin: 24px 0 12px;
+      font-size: 22px;
+      letter-spacing:-.3px;
+      font-weight: 700;
+    }
+    p{
+      margin: 16px 0;
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.6;
+    }
+    .muted{color: var(--muted);}
+    ul{
+      margin: 16px 0;
+      padding-left: 24px;
+      color: var(--text);
+    }
+    li{
+      margin: 12px 0;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    li::marker{
+      color: var(--accent);
+    }
+    .highlight{
+      background: rgba(124,92,255,.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .formwrap{
+      margin-top: 32px;
+      border-top: 1px solid var(--line);
+      padding-top: 32px;
+    }
+    .formwrap label{
+      display:block;
+      font-weight: 700;
+      margin: 20px 0 8px;
+      color: var(--text);
+      font-size: 15px;
+    }
+    .formwrap input{
+      width:100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      font: inherit;
+      font-size: 16px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .formwrap input:focus{
+      outline: none;
+      border-color: rgba(124,92,255,.55);
+      box-shadow: 0 0 0 4px rgba(124,92,255,.18);
+    }
+    .formwrap input::placeholder{
+      color: var(--muted2);
+    }
+    .btn{
+      display:block;
+      width:100%;
+      margin-top: 20px;
+      padding: 18px 32px;
+      border-radius: 14px;
+      border: 0;
+      cursor:pointer;
+      font-weight:800;
+      font-size: 18px;
+      color: #0A0D16;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 16px 40px rgba(124,92,255,.25);
+      transition: transform .15s ease, filter .15s ease;
+      text-decoration:none;
+      text-align:center;
+    }
+    .btn:hover{
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+      text-decoration: none;
+    }
+    .benefits{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap:20px;
+      margin-top:32px;
+    }
+    .benefit{
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      background: rgba(11,16,32,.55);
+      padding: 24px;
+    }
+    .benefit-icon{
+      width:48px; height:48px;
+      border-radius:12px;
+      background: linear-gradient(135deg, rgba(124,92,255,.25), rgba(34,211,238,.25));
+      display:flex; align-items:center; justify-content:center;
+      font-size:24px;
+      margin-bottom:16px;
+    }
+    .benefit strong{
+      display:block;
+      margin-bottom:8px;
+      font-size:18px;
+      font-weight: 700;
+    }
+    .benefit span{
+      color: var(--muted);
+      font-size:15px;
+      line-height:1.5;
+    }
+    .fineprint{
+      color: var(--muted2);
+      font-size: 13px;
+      margin-top: 16px;
+      text-align: center;
+    }
+    footer{
+      margin-top: 80px;
+      color: var(--muted2);
+      text-align:center;
+      padding: 40px 0;
+      border-top: 1px solid var(--line);
+    }
+    .success-message{
+      background: rgba(34,197,94,.15);
+      border: 1px solid rgba(34,197,94,.3);
+      border-radius: var(--radius2);
+      padding: 20px;
+      margin-bottom: 24px;
+      color: var(--ok);
+      text-align: center;
+    }
+    @media (max-width: 600px){
+      .hero-header{min-height: 400px;}
+      .hero-header-content{padding: 3rem 1.5rem 4rem;}
+      .hero-header-name{font-size: 2.25rem;}
+      .hero-header-tagline{font-size: 1rem;}
+      .wrap{padding: 0 20px 60px;}
+      .card{padding: 28px 24px;}
+      h2{font-size: 26px;}
+      .benefits{grid-template-columns: 1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="dot" aria-hidden="true"></span>
+      <span>Grippartner</span>
+    </a>
+    <span style="color: var(--muted2);">|</span>
+    <a href="lno-tool.html" style="font-weight: 600;">Agenda analyseren (LNO)</a>
+  </div>
+</div>
+
+<header class="hero-header">
+  <div class="hero-header-bg">
+    <img src="hero.jpg" alt="" />
+  </div>
+  <div class="hero-header-overlay"></div>
+  <div class="hero-header-content">
+    <h1 class="hero-header-name">Grippartner</h1>
+    <p class="hero-header-tagline">Elke week een praktische tip over het werken met een accountabilitypartner. Gratis. Direct toepasbaar.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="section">
+    <div class="card">
+      <h2>Elke week een tip die je verder helpt</h2>
+      
+      <p>Je weet wat belangrijk is. Maar je doet het te weinig.</p>
+      
+      <p class="muted">Niet omdat je niet gemotiveerd bent. Maar omdat het dagelijkse leven zich steeds weer opdringt.</p>
+      
+      <p><strong>Elke week deel ik één praktische tip via Grippartner.</strong></p>
+      
+      <p class="muted">Geen lange verhalen. Geen theorie. Wel iets dat je direct kunt toepassen.</p>
+      
+      <p>Iets dat je helpt om <span class="highlight">structureel aandacht te geven aan wat er écht toe doet</span>.</p>
+    </div>
+
+    <div class="benefits">
+      <div class="benefit">
+        <div class="benefit-icon">📧</div>
+        <strong>Elke week</strong>
+        <span>Je ontvangt een nieuwe tip in je inbox.</span>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">⚡</div>
+        <strong>Direct toepasbaar</strong>
+        <span>Geen theorie, maar praktische inzichten die je meteen kunt gebruiken.</span>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">🎯</div>
+        <strong>Gratis</strong>
+        <span>Geen kosten. Geen verplichtingen. Alleen waardevolle tips.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="card">
+      <h2>Meld je aan voor de wekelijkse tip</h2>
+      
+      <p>Je ontvangt elke week een praktische tip van Grippartner in je inbox.</p>
+      
+      <p class="muted">Geen spam. Geen verkooppraatjes. Alleen tips die je verder helpen.</p>
+
+      <div class="formwrap" id="aanmelden">
+        <div id="message-container"></div>
+        
+        <form action="aanmelden.php" method="post">
+          <label for="voornaam">Voornaam *</label>
+          <input id="voornaam" type="text" name="voornaam" required autocomplete="given-name" placeholder="Je voornaam" />
+
+          <label for="achternaam">Achternaam *</label>
+          <input id="achternaam" type="text" name="achternaam" required autocomplete="family-name" placeholder="Je achternaam" />
+
+          <label for="email">E-mailadres *</label>
+          <input id="email" type="email" name="email" required autocomplete="email" placeholder="je@email.nl" />
+
+          <button class="btn" type="submit">Ja, stuur me elke week een tip →</button>
+          
+          <div class="fineprint">Je kunt je op elk moment uitschrijven. We delen je gegevens nooit met anderen.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="card">
+      <h3>Wat je kunt verwachten</h3>
+      
+      <p>Elke week krijg je een email met:</p>
+      <ul>
+        <li>Een praktische tip van Grippartner</li>
+        <li>Een concrete vraag om over na te denken</li>
+        <li>Een kleine actie die je direct kunt nemen</li>
+      </ul>
+      
+      <p class="muted">Geen lange verhalen. Geen marketing. Alleen waardevolle inzichten die je verder helpen.</p>
+      
+      <p style="margin-top: 24px;"><a href="accountabilitypartner.html" style="color: var(--accent2); text-decoration: underline;">Wat is een accountabilitypartner? →</a></p>
+    </div>
+  </section>
+
+  <footer>
+    © <span id="year"></span> Grippartner • <a href="mailto:info@grippartner.nl">info@grippartner.nl</a>
+  </footer>
+
+</div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  
+  // Error/success message handling
+  const urlParams = new URLSearchParams(window.location.search);
+  const messageContainer = document.getElementById('message-container');
+  
+  if (urlParams.get('success')) {
+    messageContainer.innerHTML = '<div class="success-message">✓ Bedankt! Je bent aangemeld. Check je inbox voor de bevestiging.</div>';
+  } else if (urlParams.get('error')) {
+    const errorMsg = urlParams.get('error') === 'email' 
+      ? 'Ongeldig emailadres. Probeer het opnieuw.'
+      : 'Er is een fout opgetreden. Probeer het opnieuw.';
+    messageContainer.innerHTML = '<div style="background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3); border-radius: 16px; padding: 20px; margin-bottom: 24px; color: #EF4444; text-align: center;">✗ ' + errorMsg + '</div>';
+  }
+</script>
+
+</body>
+</html>

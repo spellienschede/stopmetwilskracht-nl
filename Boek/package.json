@@ -1,0 +1,10 @@
+{
+  "name": "grippartner-boek",
+  "private": true,
+  "scripts": {
+    "pdf": "node maak-pdf.js"
+  },
+  "devDependencies": {
+    "puppeteer": "^21.0.0"
+  }
+}

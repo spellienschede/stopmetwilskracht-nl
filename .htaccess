@@ -1,0 +1,24 @@
+DirectoryIndex index.php index.html
+
+# Blokkeer gevoelige paden
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^storage/ - [F,L]
+  RewriteRule ^src/ - [F,L]
+  RewriteRule ^migrations/ - [F,L]
+  RewriteRule ^scripts/ - [F,L]
+  RewriteRule ^config/ - [F,L]
+  RewriteRule ^docs/ - [F,L]
+  RewriteRule ^config\.local\.php$ - [F,L]
+  RewriteRule ^\.env$ - [F,L]
+  RewriteRule ^composer\.(json|lock|phar)$ - [F,L]
+  RewriteRule ^media/?$ /media.php [L]
+  RewriteRule ^sessie/([a-z0-9\-]+)/?$ /sessie.php?slug=$1 [L,QSA]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+ErrorDocument 404 /404.php

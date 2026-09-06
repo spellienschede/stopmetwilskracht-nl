@@ -1,0 +1,24 @@
+{
+    "name": "kornepot/grippartner-nl",
+    "description": "Grippartner boekverkoop en promo-workflow",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "mollie/mollie-api-php": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Grippartner\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true
+    },
+    "suggest": {
+        "mollie/mollie-api-php": "Officiële SDK. Bij SSL-problemen op de server gebruikt deze site de ingebouwde MollieHttpClient (src/MollieClient.php)."
+    }
+}

@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <title>Agenda analyseren (LNO) – Grippartner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Upload een screenshot van je agenda of plak je activiteiten. Krijg een LNO-inschatting, pas aan en zie je score." />
+  <style>
+    :root{
+      --bg:#070A12;
+      --panel:#0E1426;
+      --panel2:#0B1020;
+      --text:#EAF0FF;
+      --muted:#B8C1DA;
+      --muted2:#93A0C6;
+      --line:rgba(255,255,255,.08);
+      --accent:#7C5CFF;
+      --accent2:#22D3EE;
+      --ok:#22C55E;
+      --warn:#EAB308;
+      --err:#EF4444;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --radius: 22px;
+      --radius2: 16px;
+      --max: 900px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(124,92,255,.25), transparent 55%),
+                  radial-gradient(900px 500px at 90% 30%, rgba(34,211,238,.18), transparent 55%),
+                  radial-gradient(800px 500px at 50% 110%, rgba(124,92,255,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      line-height:1.55;
+      min-height:100vh;
+    }
+    a{color:inherit; text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(14px);
+      background: rgba(7,10,18,.65);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar-inner{
+      max-width:var(--max);
+      margin:0 auto;
+      padding: 16px 24px;
+      display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      font-weight:800; font-size:20px; letter-spacing:.2px;
+    }
+    .brand .dot{
+      width:12px; height:12px; border-radius:999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 6px rgba(124,92,255,.12);
+    }
+    .wrap{ max-width:var(--max); margin:0 auto; padding: 40px 24px 80px; }
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+      padding: 40px;
+      margin-bottom:24px;
+    }
+    h1{ font-size: clamp(28px, 4vw, 38px); font-weight: 800; margin: 0 0 12px; }
+    h2{ font-size: 24px; font-weight: 700; margin: 0 0 16px; }
+    p{ margin: 12px 0; color: var(--text); }
+    .muted{ color: var(--muted); }
+
+    .tabs{ display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tabs .tab{
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(11,16,32,.5);
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all .2s;
+    }
+    .tabs .tab:hover{ border-color: var(--accent2); color: var(--text); }
+    .tabs .tab.active{ background: rgba(124,92,255,.15); border-color: var(--accent); color: var(--text); }
+
+    .upload-zone{
+      border:2px dashed rgba(255,255,255,.2);
+      border-radius: var(--radius2);
+      padding: 48px 24px;
+      text-align: center;
+      background: rgba(11,16,32,.5);
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .upload-zone:hover, .upload-zone.dragover{ border-color: var(--accent); background: rgba(124,92,255,.08); }
+    .upload-zone input[type=file]{ position: absolute; width: 0; height: 0; opacity: 0; overflow: hidden; }
+    .upload-zone-label{ display: block; cursor: pointer; }
+    .upload-zone-label .hint{ display: block; color: var(--muted2); font-size: 14px; margin-top: 8px; }
+    .preview-wrap{ margin-top: 24px; }
+    .preview-wrap img{ max-width: 100%; max-height: 320px; border-radius: var(--radius2); border: 1px solid var(--line); }
+
+    .paste-area{
+      width: 100%;
+      min-height: 160px;
+      padding: 16px;
+      border-radius: var(--radius2);
+      border: 1px solid var(--line);
+      background: rgba(11,16,32,.5);
+      color: var(--text);
+      font: inherit;
+      font-size: 15px;
+      line-height: 1.5;
+      resize: vertical;
+    }
+    .paste-area:focus{
+      outline: none;
+      border-color: rgba(124,92,255,.55);
+      box-shadow: 0 0 0 3px rgba(124,92,255,.18);
+    }
+    .paste-hint{ color: var(--muted2); font-size: 14px; margin-top: 8px; }
+
+    .btn{
+      display:inline-block;
+      margin-top: 16px;
+      padding: 14px 28px;
+      border-radius: 14px;
+      border: 0;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 16px;
+      color: #0A0D16;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 12px 32px rgba(124,92,255,.25);
+      transition: transform .15s ease, filter .15s ease;
+      text-decoration: none;
+    }
+    .btn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+    .btn:disabled{ opacity: .6; cursor: not-allowed; transform: none; }
+
+    .activity-list{ margin: 24px 0; }
+    .activity-item{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      border-radius: var(--radius2);
+      border: 1px solid var(--line);
+      background: rgba(11,16,32,.5);
+      flex-wrap: wrap;
+    }
+    .activity-item .text{ flex: 1; min-width: 120px; }
+    .activity-item .lno-btns{ display: flex; gap: 6px; }
+    .activity-item .lno-btn{
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all .2s;
+    }
+    .activity-item .lno-btn:hover{ border-color: var(--accent2); color: var(--text); }
+    .activity-item .lno-btn.active-L{ background: rgba(34,197,94,.2); border-color: var(--ok); color: var(--ok); }
+    .activity-item .lno-btn.active-N{ background: rgba(234,179,8,.15); border-color: var(--warn); color: var(--warn); }
+    .activity-item .lno-btn.active-O{ background: rgba(239,68,68,.15); border-color: var(--err); color: var(--err); }
+    .activity-item .delete-btn{
+      padding: 6px 10px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(239,68,68,.15);
+      color: var(--err);
+      cursor: pointer;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .activity-item .delete-btn:hover{ background: rgba(239,68,68,.25); }
+    .activity-item .text.editable{ cursor: text; }
+    .activity-item .text[contenteditable]:focus{ outline: 1px solid var(--accent); border-radius: 4px; }
+
+    .score-card{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .score-item{
+      padding: 20px;
+      border-radius: var(--radius2);
+      border: 1px solid var(--line);
+      background: rgba(11,16,32,.5);
+      text-align: center;
+    }
+    .score-item .label{ font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted2); margin-bottom: 4px; }
+    .score-item .value{ font-size: 28px; font-weight: 800; }
+    .score-item.L .value{ color: var(--ok); }
+    .score-item.N .value{ color: var(--warn); }
+    .score-item.O .value{ color: var(--err); }
+    .lno-total{ margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .lno-total .value{ font-size: 22px; color: var(--accent2); }
+
+    .formwrap label{ display: block; font-weight: 600; margin: 12px 0 6px; font-size: 14px; }
+    .formwrap input{
+      width: 100%;
+      max-width: 360px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      font: inherit;
+      font-size: 16px;
+    }
+    .formwrap input:focus{
+      outline: none;
+      border-color: rgba(124,92,255,.55);
+      box-shadow: 0 0 0 3px rgba(124,92,255,.18);
+    }
+    .lno-legend{ background: rgba(11,16,32,.6); border: 1px solid var(--line); border-radius: var(--radius2); padding: 16px 20px; margin-bottom: 20px; }
+    .success-message{ background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3); border-radius: var(--radius2); padding: 16px; margin: 16px 0; color: var(--ok); }
+    .error-message{ background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3); border-radius: var(--radius2); padding: 16px; margin: 16px 0; color: var(--err); }
+    .hidden{ display: none !important; }
+    .progress-msg{ color: var(--muted2); margin-top: 12px; }
+    footer{ margin-top: 48px; color: var(--muted2); text-align: center; padding: 24px 0; border-top: 1px solid var(--line); }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="dot" aria-hidden="true"></span>
+      <span>Grippartner</span>
+    </a>
+    <span style="color: var(--muted2);">|</span>
+    <span style="font-weight: 600;">Agenda analyseren (LNO)</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <h1>Agenda analyseren met het LNO-framework</h1>
+    <p class="muted">Upload een screenshot van je agenda of plak je activiteiten. De tool maakt een inschatting wat Leverage (L), Neutraal (N) of Overhead (O) is. Pas aan waar nodig en bekijk je score.</p>
+
+    <div class="lno-legend">
+      <p class="muted" style="margin: 0 0 8px;"><strong>Waarop is de inschatting gebaseerd?</strong> De tool kijkt naar trefwoorden in de activiteit:</p>
+      <ul class="muted" style="margin: 0; padding-left: 20px; font-size: 14px;">
+        <li><strong style="color: var(--ok);">L (Leverage)</strong> — o.a. strategie, 1 op 1, datenight, klant, verkoop, coaching, kwaliteitstijd, gezin, ontwikkeling, doel, presentatie</li>
+        <li><strong style="color: var(--warn);">N (Neutraal)</strong> — o.a. vergadering, overleg, meeting, call, workshop, planning, intake</li>
+        <li><strong style="color: var(--err);">O (Overhead)</strong> — o.a. mail, e-mail, administratie, facturatie, rapportage, formulieren, declaratie</li>
+      </ul>
+      <p class="muted" style="margin: 8px 0 0; font-size: 13px;">Geen trefwoord of onduidelijk → standaard N. Je kunt altijd op L, N of O klikken om aan te passen.</p>
+    </div>
+
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="screenshot">Screenshot uploaden</button>
+      <button type="button" class="tab" data-tab="paste">Tekst plakken</button>
+    </div>
+
+    <div id="panel-screenshot" class="tab-panel">
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="image/*" />
+        <label for="fileInput" class="upload-zone-label">
+          <span>Sleep een screenshot hierheen of klik om te kiezen</span>
+          <span class="hint">JPG, PNG of WebP. Maak een scherpe screenshot van je agenda (dag- of weekweergave).</span>
+        </label>
+      </div>
+      <div class="preview-wrap hidden" id="previewWrap">
+        <img id="previewImg" alt="Preview" />
+        <br />
+        <button type="button" class="btn" id="analyzeBtn" disabled>Inschatting maken</button>
+      </div>
+      <div id="ocrProgress" class="hidden progress-msg"></div>
+    </div>
+
+    <div id="panel-paste" class="tab-panel hidden">
+      <p class="muted">Plak je agenda-items hieronder, één activiteit per regel (tijden mag je laten staan).</p>
+      <textarea class="paste-area" id="pasteArea" placeholder="Bijvoorbeeld:&#10;Teamoverleg 9:00-10:00&#10;1-op-1 met Jan&#10;E-mail bijwerken&#10;Strategie sessie"></textarea>
+      <p class="paste-hint">Één regel = één activiteit. De tool schat daarna L/N/O in.</p>
+      <button type="button" class="btn" id="pasteAnalyzeBtn">Inschatting maken</button>
+    </div>
+
+    <div id="result-section" class="hidden">
+      <h2>Activiteiten</h2>
+      <p class="muted">Klik op L, N of O om een activiteit anders in te delen. De score wordt direct bijgewerkt.</p>
+      <div id="scoreCard" class="score-card"></div>
+      <div class="activity-list" id="activityList"></div>
+
+      <h2 style="margin-top: 32px;">Rapport per e-mail</h2>
+      <div id="reportMessage"></div>
+      <div class="formwrap">
+        <label for="reportEmail">E-mailadres</label>
+        <input type="email" id="reportEmail" placeholder="je@email.nl" />
+        <button type="button" class="btn" id="sendReportBtn" style="margin-top: 12px;">Rapport per e-mail sturen</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    © <span id="year"></span> Grippartner • <a href="index.html">Home</a> • <a href="mailto:info@grippartner.nl">info@grippartner.nl</a>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+<script>
+(function() {
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // LNO-trefwoorden: volgorde = eerst L, dan O, dan N. Geen match = N.
+  // L = Leverage (input/output groot), N = Neutraal, O = Overhead (meer input dan output).
+  var LNO_KEYWORDS = {
+    L: [
+      'strategie','strategisch','ontwikkeling','klant','verkoop','groei','besluit','plan','1-op-1','1-1','1:1','1 op 1','een op een','één-op-één','één op één','coaching','leiderschap','visie','doel','resultaat','creëren','creeren','onderhandelen','deal','acquisitie','innovatie','ontwerp','ontwerpen','sessie met','presentatie','voorstelling',
+      'klantgesprek','verkoopgesprek','offerte','pitch','lead','prospect','besluitvorming','doelen','kpi','omzet','winst','markt','productontwikkeling','leidinggeven','sturing','directie','mt overleg','netwerken','brainstorm','ideeën','nieuwe klant','partner','samenwerking','waarde','output','leverage',
+      'datenight','date night','date-night','quality time','tijd samen','samen tijd','relatie','gezin','familie','kind','kinderen','vrienden','vriend','ontspanning','sporten','hardlopen','fietsen','wandelen','bewegen','gezond','ontspannen','creatief','hobby','persoonlijke ontwikkeling','ontwikkelen','leren','lezen','boek','cursus','opleiding','mentor','mentoring','sparring','advies geven','adviseren','waarde creëren','impact','verandering','transformatie','doorbraak','doorpakken','initiatief','ondernemen','ondernemerschap','groeien','schalen','uitbreiden','uitbouw','investeren','investering','rendement','opbrengst','verkopen','sales','commercieel','commercie','contract','ondertekenen','afsluiten','deal sluiten','werven','recruitment','sollicitatiegesprek','assessment','selectie','strategisch overleg','bestuur','raad van','rvc','mt','management','sturing geven','koers','richting','visie ontwikkelen','langetermijn','lange termijn','future','toekomst'
+    ],
+    O: [
+      'mail','e-mail','email','inbox','administratie','facturatie','factureren','inrichten','systeem','onderhoud','repetitief','terugkerend','archiveren','rapportage','formulieren','declaratie','agenda bijwerken','invullen','administratief',
+      'uren schrijven','urenregistratie','timesheet','declareren','reiskosten','factuur','notulen','verslag','verslagen','mailen','mail checken','backoffice','post','opruimen','notities ordenen','vergaderruimte boeken','inschrijven','invullen','formulier',
+      'administratieve','admin','correspondentie','brieven','post verwerken','inbox zero','mail afhandelen','e-mail beantwoorden','facturatie','crediteuren','debiteuren','boekhouding','boekhouden','salaris','loon','personeelsadministratie','paspoort','verlof aanvraag','verlofregistratie','ziekmelding','verzuim','verlofuren','urenstaten','urenverantwoording','declaratieformulier','onboarding documenten','contracten opstellen','archief','archiveren','opschonen','opruimen','bestanden','fileren','dossier','dossiers','agenda beheer','afspraak inplannen','inplannen','plannen','reserveren','reservering','kamer reserveren','vergaderzaal','kantoorspullen','bestellen','inkoop','inkopen','voorraad','voorraadbeheer','voorraadtelling','inventaris','schoonmaken','schoonmaak','onderhoud','reparatie','technische storing','it support','helpdesk','ticket','tickets','backlog opruimen','jira','tickets bijwerken','status update','statusupdates','rapport schrijven','maandrapportage','kwartaalrapport','jaarrapport','cijfers','excel','spreadsheet','data invoeren','invoer','registreren','registratie','aanmelden','inschrijving','aanmelding verwerken','betalen','betalingen','betalingsherinnering','incasso','betalingsregeling'
+    ],
+    N: [
+      'vergadering','overleg','stand-up','standup','afstemming','intake','bespreking','meeting','sprint','planning','retro','review','kick-off','kickoff','workshop','training','bellen','call','sessie','evaluatie',
+      'sync','afstemmen','status','voortgang','team','projectoverleg','dagstart','weeksluiting','triple','dubbel','dubbeloverleg','teamoverleg','werkoverleg','inloop','spreekuur','consult','gesprek','afspraak',
+      'weekly','daily','dagelijkse','wekelijkse','maandelijkse','kwartaal','kwartaaloverleg','voortgangsbespreking','voortgangsoverleg','projectbespreking','projectmeeting','stakeholder','stakeholders','informatie','informatief','update','updates','briefing','debriefing','nabespreking','evaluatie','terugblik','vooruitblik','agendapunt','agendapunten','agenda','rondvraag','rondes','rondgang','walk-in','inloopspreekuur','kantoordag','kantoor','werkoverleg','teamdag','teambuilding','teambuilding','uitje','borrel','lunch','koffie','kennismaking','intro','introductie','onboarding','inwerken','inwerk','kennis overdragen','kennisoverdracht','uitleg','uitleggen','instructie','instructies','uitleg krijgen','vragenuur','q&a','vraag en antwoord','presentatie bijwonen','bijwonen','luisteren','webinar','online sessie','sessie','intervisie','supervisie','collegiale','peer','feedback ronde','feedback geven','360 graden','beoordeling','functioneringsgesprek','pop-gesprek','jaargesprek','salarisgesprek','arbeidsvoorwaarden','cao','personeelsvergadering','personeelsbijeenkomst','algemene vergadering','av','aandeelhouders','shareholders','investeerders','investor','update geven','presentatie geven','demo','demonstratie','testen','acceptatie','uat','go live','implementatie','implementeren','rollout','lancering','lanceren'
+    ]
+  };
+
+  function classifyText(text) {
+    var t = (text || '').toLowerCase().trim();
+    if (!t) return 'N';
+    for (var i = 0; i < LNO_KEYWORDS.L.length; i++) {
+      if (t.indexOf(LNO_KEYWORDS.L[i]) !== -1) return 'L';
+    }
+    for (var j = 0; j < LNO_KEYWORDS.O.length; j++) {
+      if (t.indexOf(LNO_KEYWORDS.O[j]) !== -1) return 'O';
+    }
+    for (var k = 0; k < LNO_KEYWORDS.N.length; k++) {
+      if (t.indexOf(LNO_KEYWORDS.N[k]) !== -1) return 'N';
+    }
+    return 'N';
+  }
+
+  /** Eenvoudige opschoning van een regel (geen zware OCR-logica). */
+  function cleanLine(line) {
+    var s = (line || '').trim().replace(/\s+/g, ' ');
+    if (!s) return '';
+    // Alleen tijd aan het eind weghalen voor betere LNO-inschatting (optioneel)
+    s = s.replace(/\s*\d{1,2}:\d{2}\s*[-–]\s*\d{1,2}:\d{2}\s*$/g, '').trim();
+    return s;
+  }
+
+  /** Van ruwe tekst (OCR of geplakt): regels → activiteiten met LNO-inschatting. */
+  function linesToActivities(text) {
+    var lines = (text || '').split(/\r?\n/).map(cleanLine).filter(function(s) { return s.length >= 2; });
+    var seen = {};
+    var out = [];
+    lines.forEach(function(line) {
+    // Dubbele regels en pure cijfers/tijden overslaan
+      if (/^[\d\s:\.\-–]+$/.test(line)) return;
+      if (seen[line]) return;
+      seen[line] = true;
+      out.push({ text: line, category: classifyText(line) });
+    });
+    return out;
+  }
+
+  var state = { file: null, activities: [] };
+
+  var uploadZone = document.getElementById('uploadZone');
+  var fileInput = document.getElementById('fileInput');
+  var previewWrap = document.getElementById('previewWrap');
+  var previewImg = document.getElementById('previewImg');
+  var analyzeBtn = document.getElementById('analyzeBtn');
+  var ocrProgress = document.getElementById('ocrProgress');
+  var pasteArea = document.getElementById('pasteArea');
+  var pasteAnalyzeBtn = document.getElementById('pasteAnalyzeBtn');
+  var resultSection = document.getElementById('result-section');
+  var activityList = document.getElementById('activityList');
+  var scoreCard = document.getElementById('scoreCard');
+  var reportEmail = document.getElementById('reportEmail');
+  var reportMessage = document.getElementById('reportMessage');
+  var sendReportBtn = document.getElementById('sendReportBtn');
+
+  // Tabs
+  document.querySelectorAll('.tabs .tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var t = tab.dataset.tab;
+      document.querySelectorAll('.tabs .tab').forEach(function(x) { x.classList.toggle('active', x === tab); });
+      document.getElementById('panel-screenshot').classList.toggle('hidden', t !== 'screenshot');
+      document.getElementById('panel-paste').classList.toggle('hidden', t !== 'paste');
+    });
+  });
+
+  uploadZone.addEventListener('dragover', function(e) { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', function() { uploadZone.classList.remove('dragover'); });
+  uploadZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    var f = e.dataTransfer && e.dataTransfer.files[0];
+    if (f && f.type.indexOf('image') !== -1) setFile(f);
+  });
+  fileInput.addEventListener('change', function() {
+    var f = fileInput.files[0];
+    if (f) setFile(f);
+  });
+
+  function setFile(file) {
+    if (!file || !file.type.match(/^image\//)) return;
+    state.file = file;
+    var url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewWrap.classList.remove('hidden');
+    analyzeBtn.disabled = false;
+  }
+
+  analyzeBtn.addEventListener('click', function() {
+    if (!state.file) return;
+    analyzeBtn.disabled = true;
+    ocrProgress.classList.remove('hidden');
+    ocrProgress.textContent = 'Screenshot wordt gelezen…';
+    var img = new Image();
+    var objectUrl = URL.createObjectURL(state.file);
+    img.onload = function() {
+      URL.revokeObjectURL(objectUrl);
+      Tesseract.recognize(state.file, 'nld', {
+        logger: function(m) { if (m.status) ocrProgress.textContent = m.status; }
+      }).then(function(result) {
+        var text = (result.data && result.data.text) || '';
+        state.activities = linesToActivities(text);
+        if (state.activities.length === 0) {
+          ocrProgress.textContent = 'Geen activiteiten gevonden in de afbeelding. Probeer een scherpere screenshot of gebruik "Tekst plakken".';
+        } else {
+          renderActivities();
+          updateScore();
+          resultSection.classList.remove('hidden');
+          ocrProgress.textContent = 'Klaar. Pas L/N/O aan waar nodig.';
+        }
+        analyzeBtn.disabled = false;
+      }).catch(function() {
+        ocrProgress.textContent = 'Lezen mislukt. Gebruik "Tekst plakken" om je agenda handmatig in te voeren.';
+        analyzeBtn.disabled = false;
+      });
+    };
+    img.onerror = function() {
+      URL.revokeObjectURL(objectUrl);
+      ocrProgress.textContent = 'Afbeelding laden mislukt.';
+      analyzeBtn.disabled = false;
+    };
+    img.src = objectUrl;
+  });
+
+  pasteAnalyzeBtn.addEventListener('click', function() {
+    var text = (pasteArea.value || '').trim();
+    if (!text) {
+      resultSection.classList.add('hidden');
+      return;
+    }
+    state.activities = linesToActivities(text);
+    renderActivities();
+    updateScore();
+    resultSection.classList.remove('hidden');
+  });
+
+  function setCategory(index, cat) {
+    if (!state.activities[index]) return;
+    state.activities[index].category = cat;
+    var row = activityList.querySelector('[data-index="' + index + '"]');
+    if (row) {
+      row.querySelectorAll('.lno-btn').forEach(function(btn) {
+        btn.classList.remove('active-L', 'active-N', 'active-O');
+        if (btn.dataset.cat === cat) btn.classList.add('active-' + cat);
+      });
+    }
+    updateScore();
+  }
+
+  function removeActivity(index) {
+    state.activities.splice(index, 1);
+    renderActivities();
+    updateScore();
+  }
+
+  function renderActivities() {
+    activityList.innerHTML = '';
+    state.activities.forEach(function(a, i) {
+      var wrap = document.createElement('div');
+      wrap.className = 'activity-item';
+      wrap.setAttribute('data-index', i);
+      var textEl = document.createElement('div');
+      textEl.className = 'text editable';
+      textEl.setAttribute('contenteditable', 'true');
+      textEl.textContent = a.text;
+      textEl.addEventListener('blur', function() {
+        var t = (textEl.textContent || '').trim();
+        if (t) {
+          state.activities[i].text = t;
+          state.activities[i].category = classifyText(t);
+          renderActivities();
+          updateScore();
+        }
+      });
+      var btns = document.createElement('div');
+      btns.className = 'lno-btns';
+      ['L', 'N', 'O'].forEach(function(cat) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'lno-btn' + (a.category === cat ? ' active-' + cat : '');
+        btn.dataset.cat = cat;
+        btn.textContent = cat;
+        btn.addEventListener('click', function() { setCategory(i, cat); });
+        btns.appendChild(btn);
+      });
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'delete-btn';
+      delBtn.title = 'Verwijderen';
+      delBtn.textContent = '×';
+      delBtn.addEventListener('click', function() { removeActivity(i); });
+      btns.appendChild(delBtn);
+      wrap.appendChild(textEl);
+      wrap.appendChild(btns);
+      activityList.appendChild(wrap);
+    });
+  }
+
+  function updateScore() {
+    var L = 0, N = 0, O = 0;
+    state.activities.forEach(function(a) {
+      if (a.category === 'L') L++;
+      else if (a.category === 'N') N++;
+      else O++;
+    });
+    var total = state.activities.length;
+    var pL = total ? Math.round(100 * L / total) : 0;
+    var pN = total ? Math.round(100 * N / total) : 0;
+    var pO = total ? Math.round(100 * O / total) : 0;
+    var totalScore = total ? Math.min(10, Math.round(10 * (pL / 100 * 1 + pN / 100 * 0.5 + pO / 100 * 0))) : 0;
+    scoreCard.innerHTML =
+      '<div class="score-item L"><div class="label">Leverage</div><div class="value">' + pL + '%</div></div>' +
+      '<div class="score-item N"><div class="label">Neutraal</div><div class="value">' + pN + '%</div></div>' +
+      '<div class="score-item O"><div class="label">Overhead</div><div class="value">' + pO + '%</div></div>' +
+      '<div class="score-item lno-total"><div class="label">LNO-score (1–10)</div><div class="value">' + totalScore + '</div></div>';
+  }
+
+  sendReportBtn.addEventListener('click', function() {
+    var email = (reportEmail.value || '').trim();
+    if (!email) {
+      reportMessage.className = 'error-message';
+      reportMessage.textContent = 'Vul een geldig e-mailadres in.';
+      return;
+    }
+    reportMessage.textContent = '';
+    sendReportBtn.disabled = true;
+    var payload = {
+      email: email,
+      activities: state.activities,
+      score: {
+        L: state.activities.filter(function(a) { return a.category === 'L'; }).length,
+        N: state.activities.filter(function(a) { return a.category === 'N'; }).length,
+        O: state.activities.filter(function(a) { return a.category === 'O'; }).length
+      }
+    };
+    fetch('lno-rapport.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function(r) { return r.json().catch(function() { return { ok: false, error: 'Onbekende fout' }; }); })
+      .then(function(data) {
+        sendReportBtn.disabled = false;
+        if (data.ok) {
+          reportMessage.className = 'success-message';
+          reportMessage.textContent = 'Rapport is naar je e-mailadres verstuurd.';
+        } else {
+          reportMessage.className = 'error-message';
+          reportMessage.textContent = data.error || 'Versturen mislukt. Probeer het later opnieuw.';
+        }
+      })
+      .catch(function() {
+        sendReportBtn.disabled = false;
+        reportMessage.className = 'error-message';
+        reportMessage.textContent = 'Versturen mislukt. Controleer je verbinding.';
+      });
+  });
+})();
+</script>
+</body>
+</html>

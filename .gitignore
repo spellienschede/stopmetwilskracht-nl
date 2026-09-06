@@ -1,0 +1,33 @@
+# Secrets & lokale config
+.env
+config.local.php
+**/config.local.php
+config.local.production.php
+
+# Composer
+/vendor/
+
+# Logs & runtime
+*.log
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/rate-limits/*
+!/storage/rate-limits/.gitkeep
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+/storage/cache/*
+!/storage/cache/.gitkeep
+/storage/meta_capi_token.php
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Tooling
+composer.phar
+node_modules/
+Boek/node_modules/
+.playwright-mcp/
