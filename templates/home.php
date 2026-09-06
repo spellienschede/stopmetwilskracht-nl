@@ -65,9 +65,9 @@ $hook = Config::string('BOOK_HOOK');
 
       <div class="cta-row">
         <?php if ($presaleActive): ?>
-          <a class="btn btn-primary btn-lg" href="<?= e(\Grippartner\Config::orderUrl()) ?>">Pre-order met € 10 korting</a>
+          <a class="btn btn-primary btn-lg" href="<?= e(Config::orderUrl()) ?>">Pre-order met € 10 korting</a>
         <?php else: ?>
-          <a class="btn btn-primary btn-lg" href="<?= e(\Grippartner\Config::orderUrl()) ?>"><?= e($cta) ?></a>
+          <a class="btn btn-primary btn-lg" href="<?= e(Config::orderUrl()) ?>"><?= e($cta) ?></a>
         <?php endif; ?>
       </div>
       <p class="cta-hint">Weinig budget? <a href="#promo">Krijg het boek gratis via een echte promo</a>.</p>
@@ -158,9 +158,9 @@ $hook = Config::string('BOOK_HOOK');
         <p class="muted">Veilig betalen via iDEAL.</p>
         <p class="buy-panel-actions">
           <?php if ($presaleActive): ?>
-            <a class="btn btn-primary btn-lg" href="<?= e(\Grippartner\Config::orderUrl()) ?>">Pre-order met € 10 korting</a>
+            <a class="btn btn-primary btn-lg" href="<?= e(Config::orderUrl()) ?>">Pre-order met € 10 korting</a>
           <?php else: ?>
-            <a class="btn btn-primary btn-lg" href="<?= e(\Grippartner\Config::orderUrl()) ?>"><?= e($cta) ?></a>
+            <a class="btn btn-primary btn-lg" href="<?= e(Config::orderUrl()) ?>"><?= e($cta) ?></a>
           <?php endif; ?>
         </p>
       </div>
