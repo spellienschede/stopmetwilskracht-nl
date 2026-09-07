@@ -350,6 +350,14 @@ a:hover { color: var(--ink); text-decoration-thickness: 2px; }
   font-weight: 800;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+  text-align: right;
+  color: var(--ink);
+}
+
+.section-ink .promo-kicker,
+.section-ink .promo-kicker-on-ink {
+  background: var(--yellow);
+  border-color: var(--yellow);
   color: var(--ink);
 }
 
