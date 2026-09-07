@@ -120,6 +120,23 @@ $hook = Config::string('BOOK_HOOK');
   </div>
 </section>
 
+<section class="section section-paper" id="reviews">
+  <div class="wrap reviews-panel">
+    <p class="eyebrow">Lezers</p>
+    <h2>Wat anderen zeggen</h2>
+    <div class="reviews-grid">
+      <?php foreach (Config::bookReviews() as $review): ?>
+        <figure class="review">
+          <blockquote>
+            <p><?= e($review['quote']) ?></p>
+          </blockquote>
+          <figcaption><?= e($review['name']) ?>, <?= e($review['place']) ?></figcaption>
+        </figure>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+
 <section class="section section-ink" id="kopen">
   <div class="wrap buy-panel">
     <div class="buy-panel-grid">

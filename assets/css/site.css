@@ -314,6 +314,45 @@ a:hover { color: var(--ink); text-decoration-thickness: 2px; }
   color: var(--ink-soft);
 }
 
+.reviews-panel {
+  max-width: 52rem;
+}
+.reviews-grid {
+  margin: 1.5rem 0 0;
+  display: grid;
+  gap: 1.35rem;
+}
+@media (min-width: 800px) {
+  .reviews-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.75rem 2rem;
+  }
+}
+.review {
+  margin: 0;
+  padding: 1rem 0 0;
+  border-top: var(--border-thick);
+}
+.review blockquote {
+  margin: 0 0 0.85rem;
+  padding: 0;
+  border: 0;
+}
+.review blockquote p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.review figcaption {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
 .promo-kicker-on-ink {
   background: var(--yellow);
   border-color: var(--yellow);

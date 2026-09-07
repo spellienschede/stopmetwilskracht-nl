@@ -428,6 +428,37 @@ final class Config
         return count(self::presaleBonuses());
     }
 
+    /**
+     * Lezersreviews voor de homepage.
+     *
+     * @return list<array{name: string, place: string, quote: string}>
+     */
+    public static function bookReviews(): array
+    {
+        return [
+            [
+                'name' => 'Rink',
+                'place' => 'Hardegarijp',
+                'quote' => 'Ik heb dit boek met veel plezier gelezen; het bleef me tot het einde boeien. Korne combineert een overtuigende methode met persoonlijke en soms kwetsbare verhalen. De praktische uitleg zorgt ervoor dat je precies begrijpt hoe je zelf kunt beginnen.',
+            ],
+            [
+                'name' => 'Moniek',
+                'place' => 'Enschede',
+                'quote' => 'Dit boek laat op een open en persoonlijke manier zien wat een grippartner kan betekenen, juist wanneer het leven over veel meer gaat dan werk en doelen halen. Het helpt je uitzoomen en opnieuw aandacht geven aan de mensen en onderwerpen die werkelijk belangrijk voor je zijn. Mooie methode om gewoontes echt vol te houden.',
+            ],
+            [
+                'name' => 'Derk',
+                'place' => 'Barneveld',
+                'quote' => 'Stop met wilskracht is leuk geschreven en leest lekker weg. Vooral het gedeelte over nieuwsgierigheid vond ik prachtig. Goede vragen stellen zonder direct iets voor een ander in te vullen, is niet alleen belangrijk voor grippartners, maar een mooie les voor het leven.',
+            ],
+            [
+                'name' => 'Paul',
+                'place' => 'Amstelveen',
+                'quote' => 'Als grippartner van Korne sinds 2020 herken ik de verhalen en situaties in dit boek. Het laat eerlijk zien hoe één vast gesprek, een gedeeld document en goede vragen je helpen patronen te herkennen en aandacht te blijven geven aan wat je werkelijk belangrijk vindt.',
+            ],
+        ];
+    }
+
     /** Korte samenvatting van pre-orderprijs + bonussen + deadline. */
     public static function presaleBonusText(): string
     {
