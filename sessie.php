@@ -172,7 +172,6 @@ ob_start();
               <label>Naam<input name="name" required maxlength="160" value="<?= e((string) ($data['name'] ?? '')) ?>" autocomplete="name"></label>
               <label>E-mailadres<input type="email" name="email" required maxlength="255" value="<?= e((string) ($data['email'] ?? '')) ?>" autocomplete="email"></label>
             </div>
-            <p class="hint" style="margin-top:0.75rem">Met je aanmelding ga je akkoord met het <a href="/privacy.php">privacybeleid</a>. Je ontvangt ook de wekelijkse tip van Korne; uitschrijven kan altijd.</p>
             <p style="margin-top:1.25rem"><button class="btn btn-primary" type="submit">Ja, ik wil erbij zijn</button></p>
           </form>
         </div>
