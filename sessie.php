@@ -1,12 +1,15 @@
 <?php
 declare(strict_types=1);
 
+use Grippartner\MetaCapi;
 use Grippartner\RateLimiter;
 use Grippartner\Security;
 use Grippartner\SessionService;
 use Grippartner\Validator;
 
 require __DIR__ . '/src/bootstrap.php';
+
+MetaCapi::captureBrowserIds();
 
 $slug = trim((string) ($_GET['slug'] ?? ''));
 if ($slug === '') {
@@ -27,6 +30,7 @@ $errors = [];
 $success = false;
 $already = false;
 $publicNr = '';
+$metaPixelEvents = [];
 $data = Validator::normalizeSessionSignupInput([]);
 $open = SessionService::isOpen($session);
 $when = SessionService::formatWhen($session);
@@ -46,6 +50,28 @@ if (is_post() && $open) {
                 $success = true;
                 $already = !empty($row['_already']);
                 $publicNr = (string) ($row['public_signup_number'] ?? '');
+                if ($publicNr !== '' && !$already) {
+                    $leadEventId = 'session-lead:' . $publicNr;
+                    $tracked = !empty($_SESSION['meta_session_lead_tracked'][$publicNr]);
+                    if (!$tracked) {
+                        $metaPixelEvents = [[
+                            'Lead',
+                            [
+                                'content_name' => (string) ($session['title'] ?? 'Online sessie'),
+                                'content_category' => 'live-session',
+                                'content_ids' => [(string) ($session['slug'] ?? '')],
+                                'status' => 'submitted',
+                            ],
+                            $leadEventId,
+                        ]];
+                        $_SESSION['meta_session_lead_tracked'][$publicNr] = true;
+                        try {
+                            MetaCapi::sendSessionLead($row, $session);
+                        } catch (Throwable $capiEx) {
+                            \Grippartner\Logger::error('Meta CAPI session lead failed', ['m' => $capiEx->getMessage()]);
+                        }
+                    }
+                }
             } catch (Throwable $e) {
                 \Grippartner\Logger::error('Session signup failed', ['m' => $e->getMessage()]);
                 $errors['form'] = 'Aanmelding kon niet worden opgeslagen. Probeer het opnieuw.';

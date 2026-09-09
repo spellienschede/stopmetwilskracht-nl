@@ -114,6 +114,41 @@ final class MetaCapi
         );
     }
 
+    /**
+     * @param array<string,mixed> $signup live_session_signups row
+     * @param array<string,mixed> $session live_sessions row
+     */
+    public static function sendSessionLead(array $signup, array $session): bool
+    {
+        $public = (string) ($signup['public_signup_number'] ?? '');
+        if ($public === '') {
+            return false;
+        }
+        $name = trim((string) ($signup['name'] ?? ''));
+        $parts = preg_split('/\s+/', $name, 2) ?: [];
+        $slug = (string) ($session['slug'] ?? '');
+        $sourceUrl = $slug !== ''
+            ? SessionService::publicUrl($session)
+            : (Config::baseUrl() . '/sessie');
+
+        return self::send(
+            'Lead',
+            'session-lead:' . $public,
+            [
+                'content_name' => (string) ($session['title'] ?? 'Online sessie'),
+                'content_category' => 'live-session',
+                'content_ids' => $slug !== '' ? [$slug] : [],
+                'status' => 'submitted',
+            ],
+            self::userDataFromOrder([
+                'email' => (string) ($signup['email'] ?? ''),
+                'first_name' => (string) ($parts[0] ?? $name),
+                'last_name' => (string) ($parts[1] ?? ''),
+            ]),
+            $sourceUrl
+        );
+    }
+
     /** @param array<string,mixed> $order */
     public static function sendInitiateCheckout(array $order): bool
     {
