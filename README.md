@@ -1,9 +1,5 @@
 ﻿# stopmetwilskracht.nl
 
-Actiesite (noindex) voor ads → SEO-waarde blijft op [grippartner.nl](https://www.grippartner.nl).
+Actiesite (noindex) voor ads. SEO/bestellen blijft op [grippartner.nl](https://www.grippartner.nl).
 
-- `SITE_MODE=action` + canonicals naar Grip
-- Bestel-CTA’s → `https://www.grippartner.nl/bestellen.php`
-- Geen eigen Mollie/checkout
-
-Deploy: Plesk Git + `config.local.php` op de server (niet in git).
+Deploy: `git push origin master` met SSH-key `id_ed25519_kornepot_sites` — Cloud86/Plesk haalt automatisch op.
