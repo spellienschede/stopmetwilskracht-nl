@@ -72,9 +72,9 @@ final class SessionService
                 'Wat bijna niemand ziet aan het verschil tussen druk zijn en controle hebben',
             ],
             '100-miljoen-views' => [
-                'Waarom bereik niet hetzelfde is als aandacht die blijft hangen',
-                'Het patroon achter content die miljoenen keren wordt bekeken — zonder elke dag te posten',
-                'Wat bijna niemand doet vóór ze op publiceren drukken',
+                'Hoe krijgen je berichten bereik, veel bereik?',
+                'Wat is de fout die ik pas na maanden door had?',
+                'Hoe zet je bereik om in klanten?',
             ],
             default => [],
         };
