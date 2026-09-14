@@ -71,6 +71,11 @@ final class SessionService
                 'Het moment waarop je denkt dat jij kiest — terwijl iets anders stuurt',
                 'Wat bijna niemand ziet aan het verschil tussen druk zijn en controle hebben',
             ],
+            '100-miljoen-views' => [
+                'Waarom bereik niet hetzelfde is als aandacht die blijft hangen',
+                'Het patroon achter content die miljoenen keren wordt bekeken — zonder elke dag te posten',
+                'Wat bijna niemand doet vóór ze op publiceren drukken',
+            ],
             default => [],
         };
     }
