@@ -37,8 +37,8 @@ final class Config
             'BOOK_PRICE_CENTS' => 4900,
             'BOOK_PRESALE_PRICE_CENTS' => 3900,
             'BOOK_CURRENCY' => 'EUR',
-            'BOOK_PRESALE_END_DATE' => '2026-09-14',
-            'BOOK_RELEASE_DATE' => '2026-10-03',
+            'BOOK_PRESALE_END_DATE' => '2026-09-21',
+            'BOOK_RELEASE_DATE' => '2026-10-05',
             'BOOK_PRESENTATION_DATE' => '2026-10-05',
             'BOOK_PRESENTATION_TIME' => '19:30',
             'BOOK_ISBN' => '',
@@ -274,12 +274,12 @@ final class Config
 
     public static function presaleEndDateImmutable(): ?\DateTimeImmutable
     {
-        return self::dateFromConfig('BOOK_PRESALE_END_DATE', '2026-09-14');
+        return self::dateFromConfig('BOOK_PRESALE_END_DATE', '2026-09-21');
     }
 
     public static function releaseDateImmutable(): ?\DateTimeImmutable
     {
-        return self::dateFromConfig('BOOK_RELEASE_DATE', '2026-10-03');
+        return self::dateFromConfig('BOOK_RELEASE_DATE', '2026-10-05');
     }
 
     public static function presentationDateImmutable(): ?\DateTimeImmutable

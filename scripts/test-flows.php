@@ -35,14 +35,14 @@ function assert_true(bool $cond, string $msg): void
 
 echo "=== Config datumterminologie ===\n";
 assert_true(Config::string('BOOK_TITLE') === 'Grippartner', 'boek titel');
-$beforePresaleEnd = new DateTimeImmutable('2026-09-13', new DateTimeZone('Europe/Amsterdam'));
-$lastPresaleDay = new DateTimeImmutable('2026-09-14 12:00:00', new DateTimeZone('Europe/Amsterdam'));
-$afterPresale = new DateTimeImmutable('2026-09-15', new DateTimeZone('Europe/Amsterdam'));
+$beforePresaleEnd = new DateTimeImmutable('2026-09-20', new DateTimeZone('Europe/Amsterdam'));
+$lastPresaleDay = new DateTimeImmutable('2026-09-21 12:00:00', new DateTimeZone('Europe/Amsterdam'));
+$afterPresale = new DateTimeImmutable('2026-09-22', new DateTimeZone('Europe/Amsterdam'));
 assert_true(Config::isPresaleActive($beforePresaleEnd) === true, 'vóór pre-orderdeadline = pre-order actief');
 assert_true(Config::isPresaleActive($lastPresaleDay) === true, 'op laatste pre-orderdag = nog pre-order');
 assert_true(Config::isPresaleActive($afterPresale) === false, 'na pre-orderdeadline = geen pre-order meer');
-$afterPresaleBeforeRelease = new DateTimeImmutable('2026-09-20', new DateTimeZone('Europe/Amsterdam'));
-$onRelease = new DateTimeImmutable('2026-10-03', new DateTimeZone('Europe/Amsterdam'));
+$afterPresaleBeforeRelease = new DateTimeImmutable('2026-09-25', new DateTimeZone('Europe/Amsterdam'));
+$onRelease = new DateTimeImmutable('2026-10-05', new DateTimeZone('Europe/Amsterdam'));
 assert_true(Config::isReleased($afterPresaleBeforeRelease) === false, 'vóór release = nog niet uit');
 assert_true(Config::isReleased($onRelease) === true, 'vanaf release = uit');
 assert_true(Config::currentPriceCents($beforePresaleEnd) === Config::int('BOOK_PRESALE_PRICE_CENTS', 3900), 'pre-orderprijs vóór deadline');

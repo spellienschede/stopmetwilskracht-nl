@@ -44,8 +44,8 @@ Zie `.env.example` en `config.local.example.php`. Minimaal:
 | `APP_BASE_URL` | Publieke basis-URL |
 | `DB_*` | Database |
 | `BOOK_PRICE_CENTS` | 4900 (normale prijs) |
-| `BOOK_PRESALE_END_DATE` | 2026-09-14 (einde pre-orderkorting + bonussen) |
-| `BOOK_RELEASE_DATE` | 2026-10-03 (verschijning/verzending) |
+| `BOOK_PRESALE_END_DATE` | 2026-09-21 (einde pre-orderkorting + bonussen) |
+| `BOOK_RELEASE_DATE` | 2026-10-05 (verschijning/verzending) |
 | `BOOK_PRESENTATION_DATE` | 2026-10-05 (online boekpresentatie) |
 | `BOOK_PRESENTATION_TIME` | 19:30 |
 | `MOLLIE_API_KEY` | `test_…` of `live_…` |

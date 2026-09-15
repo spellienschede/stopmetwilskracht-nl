@@ -55,11 +55,17 @@ final class SessionService
         );
         self::$schemaChecked = true;
         self::seedDefaultSession();
+        self::migrateSessions();
     }
 
     private static function defaultSessionIntro(): string
     {
         return 'Je denkt dat je controle hebt — tot je merkt hoeveel er langs je heen gaat. In 30 minuten delen Bas en Korné drie geheimen over echte controle op je leven. Kort, concreet, gratis. Meld je aan; de Zoom-link volgt per mail.';
+    }
+
+    private static function nooitMeerTeDrukIntro(): string
+    {
+        return 'Je agenda barst, je to-dolijst groeit — en toch schiet wat er écht toe doet erbij in. In 30 minuten laten Bas en Korné zien hoe je stopt met “te druk” als standaardmodus. Kort, concreet, gratis. Meld je aan; de Zoom-link volgt per mail.';
     }
 
     /** Cliffhangers voor de landingspagina (per slug). */
@@ -71,13 +77,44 @@ final class SessionService
                 'Het moment waarop je denkt dat jij kiest — terwijl iets anders stuurt',
                 'Wat bijna niemand ziet aan het verschil tussen druk zijn en controle hebben',
             ],
-            '100-miljoen-views' => [
-                'Hoe krijgen je berichten bereik, veel bereik?',
-                'Wat is de fout die ik pas na maanden door had?',
-                'Hoe zet je bereik om in klanten?',
+            'nooit-meer-te-druk' => [
+                'Waarom “ik heb het te druk” bijna nooit over tijd gaat',
+                'Het verschil tussen druk zijn en de belangrijke dingen doen',
+                'Hoe je in één week merkt dat je agenda weer van jou is',
             ],
             default => [],
         };
+    }
+
+    /** Eenmalig: oude 100-miljoen-views-sessie weg, Nooit meer te druk? (29 sep 2026) erin. */
+    private static function migrateSessions(): void
+    {
+        $old = self::findBySlug('100-miljoen-views');
+        if ($old) {
+            $pdo = Database::pdo();
+            $del = $pdo->prepare('DELETE FROM live_sessions WHERE id = ?');
+            $del->execute([(int) $old['id']]);
+        }
+        if (self::findBySlug('nooit-meer-te-druk')) {
+            return;
+        }
+        self::create([
+            'slug' => 'nooit-meer-te-druk',
+            'title' => 'Nooit meer te druk?',
+            'hosts' => 'Bas Oude Luttikhuis en Korné Pot',
+            'intro' => self::nooitMeerTeDrukIntro(),
+            'starts_at' => '2026-09-29 19:30:00',
+            'ends_at' => '2026-09-29 20:00:00',
+            'meeting_url' => '',
+            'signup_open' => true,
+            'is_published' => true,
+            'host1_name' => 'Bas Oude Luttikhuis',
+            'host1_role' => 'Ondernemer & coach',
+            'host1_photo' => '/assets/img/sessions/bas-oude-luttikhuis.jpg',
+            'host2_name' => 'Korné Pot',
+            'host2_role' => 'Auteur Stop met wilskracht',
+            'host2_photo' => '/assets/img/sessions/korne-pot-adidas.jpg',
+        ]);
     }
 
     private static function seedDefaultSession(): void
