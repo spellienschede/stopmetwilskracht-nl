@@ -65,7 +65,29 @@ final class SessionService
 
     private static function nooitMeerTeDrukIntro(): string
     {
-        return 'Je agenda barst, je to-dolijst groeit — en toch schiet wat er écht toe doet erbij in. In 30 minuten laten Bas en Korné zien hoe je stopt met “te druk” als standaardmodus. Kort, concreet, gratis. Meld je aan; de Zoom-link volgt per mail.';
+        return 'Je agenda barst, je to-dolijst groeit — en toch schiet wat er écht toe doet erbij in. In 30 minuten laat Korné zien hoe je stopt met “te druk” als standaardmodus. Kort, concreet, gratis. Meld je aan; de Zoom-link volgt per mail.';
+    }
+
+    /** @return array<string,mixed> */
+    private static function nooitMeerTeDrukPayload(): array
+    {
+        return [
+            'slug' => 'nooit-meer-te-druk',
+            'title' => 'Nooit meer te druk?',
+            'hosts' => 'Korné Pot',
+            'intro' => self::nooitMeerTeDrukIntro(),
+            'starts_at' => '2026-09-29 19:30:00',
+            'ends_at' => '2026-09-29 20:00:00',
+            'meeting_url' => '',
+            'signup_open' => true,
+            'is_published' => true,
+            'host1_name' => 'Korné Pot',
+            'host1_role' => 'Auteur Stop met wilskracht',
+            'host1_photo' => '/assets/img/sessions/korne-pot-adidas.jpg',
+            'host2_name' => '',
+            'host2_role' => '',
+            'host2_photo' => '',
+        ];
     }
 
     /** Cliffhangers voor de landingspagina (per slug). */
@@ -95,26 +117,19 @@ final class SessionService
             $del = $pdo->prepare('DELETE FROM live_sessions WHERE id = ?');
             $del->execute([(int) $old['id']]);
         }
-        if (self::findBySlug('nooit-meer-te-druk')) {
+        $payload = self::nooitMeerTeDrukPayload();
+        $existing = self::findBySlug('nooit-meer-te-druk');
+        if ($existing) {
+            $hosts = (string) ($existing['hosts'] ?? '');
+            if (str_contains($hosts, 'Bas') || (string) ($existing['host2_name'] ?? '') !== '') {
+                if (!empty($existing['meeting_url'])) {
+                    $payload['meeting_url'] = (string) $existing['meeting_url'];
+                }
+                self::update((int) $existing['id'], $payload);
+            }
             return;
         }
-        self::create([
-            'slug' => 'nooit-meer-te-druk',
-            'title' => 'Nooit meer te druk?',
-            'hosts' => 'Bas Oude Luttikhuis en Korné Pot',
-            'intro' => self::nooitMeerTeDrukIntro(),
-            'starts_at' => '2026-09-29 19:30:00',
-            'ends_at' => '2026-09-29 20:00:00',
-            'meeting_url' => '',
-            'signup_open' => true,
-            'is_published' => true,
-            'host1_name' => 'Bas Oude Luttikhuis',
-            'host1_role' => 'Ondernemer & coach',
-            'host1_photo' => '/assets/img/sessions/bas-oude-luttikhuis.jpg',
-            'host2_name' => 'Korné Pot',
-            'host2_role' => 'Auteur Stop met wilskracht',
-            'host2_photo' => '/assets/img/sessions/korne-pot-adidas.jpg',
-        ]);
+        self::create($payload);
     }
 
     private static function seedDefaultSession(): void
