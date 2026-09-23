@@ -24,7 +24,7 @@ $metaPixelId = Config::string('META_PIXEL_ID');
 $metaPixelEvents = $metaPixelEvents ?? [];
 $presaleActive = Config::isPresaleActive();
 $released = Config::isReleased();
-$presaleEndIso = Config::string('BOOK_PRESALE_END_DATE', '2026-09-21');
+$presaleEndIso = Config::string('BOOK_PRESALE_END_DATE', '2026-09-29');
 ?>
 <!DOCTYPE html>
 <html lang="nl">

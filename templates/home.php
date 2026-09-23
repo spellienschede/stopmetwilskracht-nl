@@ -11,7 +11,6 @@ use Grippartner\Config;
 /** @var bool $presaleActive */
 /** @var bool $released */
 $presaleEndShort = Config::formatPresaleEndDateShort();
-$releaseShort = Config::formatReleaseDateShort();
 $heroImage = $productPhoto !== '' ? $productPhoto : $cover;
 $countdown = Config::countdownLabel();
 $bookTitle = Config::string('BOOK_TITLE');
@@ -24,9 +23,9 @@ $hook = Config::string('BOOK_HOOK');
         <?php if ($presaleActive): ?>
           <p class="eyebrow">Pre-order open · tot <?= e($presaleEndShort) ?></p>
         <?php elseif ($released): ?>
-          <p class="eyebrow">Nu verkrijgbaar · sinds <?= e($releaseShort) ?></p>
+          <p class="eyebrow">Nu verkrijgbaar</p>
         <?php else: ?>
-          <p class="eyebrow">Bestel nu · verzending rond <?= e($releaseShort) ?></p>
+          <p class="eyebrow">Bestel nu</p>
         <?php endif; ?>
         <h1><?= e($bookTitle) ?></h1>
       </div>
@@ -235,7 +234,7 @@ $hook = Config::string('BOOK_HOOK');
       <summary>Tot wanneer kan ik pre-orderen?</summary>
       <p>Pre-order is nu open tot <?= e($presaleEnd) ?>. Je krijgt dan € 10 korting (<?= e(Config::priceFormatted()) ?> i.p.v. <?= e(Config::regularPriceFormatted()) ?>) én 2 bonussen. Daarna is het boek verkrijgbaar voor <?= e(Config::regularPriceFormatted()) ?> — zonder die pre-orderbonussen.</p>
     </details>
-    <details><summary>Wanneer verschijnt het boek?</summary><p>Het boek verschijnt op <?= e($release) ?> en wordt dan verzonden. De online boekpresentatie is op <?= e(Config::formatPresentationLabel()) ?> — <a href="/boekpresentatie.php">meld je daar gratis voor aan</a>.</p></details>
+    <details><summary>Wanneer wordt het boek verzonden?</summary><p>Zodra het boek onderweg is, krijg je bericht. De online boekpresentatie is op <?= e(Config::formatPresentationLabel()) ?> — <a href="/boekpresentatie.php">meld je daar gratis voor aan</a>.</p></details>
     <?php if ($presaleActive): ?>
     <details>
       <summary>Welke bonussen krijg ik bij pre-order?</summary>

@@ -24,7 +24,7 @@ ob_start();
     <h2>Product</h2>
     <p>Het boek <em><?= e(Config::string('BOOK_TITLE')) ?></em> van Korne Pot. Normale prijs: <?= e(Config::regularPriceFormatted()) ?> per exemplaar. Bij pre-order tot <?= e(Config::formatPresaleEndDate()) ?> geldt <?= e(Config::formatCents(Config::int('BOOK_PRESALE_PRICE_CENTS', 3900))) ?> per exemplaar. Prijzen inclusief btw en verzending (heen), tenzij anders vermeld.</p>
     <h2>Pre-order / levering</h2>
-    <p>Pre-order met korting en bonussen is mogelijk tot <?= e(Config::formatPresaleEndDate()) ?>. Het boek verschijnt op <?= e(Config::formatReleaseDate()) ?>; verzending volgt rond of na die datum. Daarna zo snel als praktisch mogelijk.</p>
+    <p>Pre-order met korting en bonussen is mogelijk tot <?= e(Config::formatPresaleEndDate()) ?>. Verzending volgt zo snel als praktisch mogelijk.</p>
     <h2>Betaling</h2>
     <p>Betaling via Mollie (o.a. iDEAL). Een bestelling is pas definitief na bevestigde betaling.</p>
     <h2>Promo / gratis exemplaar</h2>

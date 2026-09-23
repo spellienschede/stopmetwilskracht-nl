@@ -37,7 +37,7 @@ final class Config
             'BOOK_PRICE_CENTS' => 4900,
             'BOOK_PRESALE_PRICE_CENTS' => 3900,
             'BOOK_CURRENCY' => 'EUR',
-            'BOOK_PRESALE_END_DATE' => '2026-09-21',
+            'BOOK_PRESALE_END_DATE' => '2026-09-29',
             'BOOK_RELEASE_DATE' => '2026-10-05',
             'BOOK_PRESENTATION_DATE' => '2026-10-19',
             'BOOK_PRESENTATION_TIME' => '19:30',
@@ -261,20 +261,18 @@ final class Config
 
     public static function availabilityText(): string
     {
-        $release = self::formatReleaseDate();
         if (self::isReleased()) {
-            return 'Beschikbaar sinds ' . $release . '. Verzending zo snel mogelijk.';
+            return 'Nu verkrijgbaar. Verzending zo snel mogelijk.';
         }
         if (self::isPresaleActive()) {
-            return 'Pre-order nu open tot ' . self::formatPresaleEndDate()
-                . ' · verwachte verzending rond ' . $release;
+            return 'Pre-order nu open tot ' . self::formatPresaleEndDate();
         }
-        return 'Bestel nu · verwachte verzending rond ' . $release;
+        return 'Bestel nu';
     }
 
     public static function presaleEndDateImmutable(): ?\DateTimeImmutable
     {
-        return self::dateFromConfig('BOOK_PRESALE_END_DATE', '2026-09-21');
+        return self::dateFromConfig('BOOK_PRESALE_END_DATE', '2026-09-29');
     }
 
     public static function releaseDateImmutable(): ?\DateTimeImmutable

@@ -58,7 +58,7 @@ ob_start();
         <div class="status-box status-ok">
           <h2>Betaling geslaagd</h2>
           <p>Bedankt. Je bestelling <strong><?= e($order['public_order_number']) ?></strong> is bevestigd. Je ontvangt een bevestigingsmail op <?= e($order['email']) ?>.</p>
-          <p>Verwachte verzending rond <?= e(Config::formatReleaseDate()) ?>.</p>
+          <p>Zodra het boek onderweg is, krijg je bericht.</p>
           <?php if (Config::isPresaleActive()): ?>
             <p class="bonus-note"><?= e(Config::presaleBonusText()) ?></p>
           <?php endif; ?>

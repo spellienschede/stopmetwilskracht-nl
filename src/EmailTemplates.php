@@ -13,7 +13,6 @@ final class EmailTemplates
         $qty = (int) $o['quantity'];
         $total = money_cents((int) $o['total_cents']);
         $addr = nl2br(e(OrderService::formatAddress($o)));
-        $release = e(Config::formatReleaseDate());
         $bonusHtml = '';
         $bonusText = '';
         if (Config::isPresaleActive()) {
@@ -29,14 +28,14 @@ final class EmailTemplates
             . "<strong>Betaald:</strong> {$total}<br>"
             . '<strong>Inclusief</strong> btw en verzending</p>'
             . "<p><strong>Afleveradres</strong><br>{$addr}</p>"
-            . '<p>Verwachte verschijning/verzending rond <strong>' . $release . '</strong>.</p>'
+            . '<p>Zodra het boek onderweg is, krijg je bericht.</p>'
             . $bonusHtml
             . '<p>Vragen? Mail naar <a href="mailto:info@kornepot.nl">info@kornepot.nl</a>.</p>'
             . '<p>Groet,<br>Korne Pot</p>';
         $text = "Hallo {$o['first_name']},\n\nBedankt voor je bestelling van " . Config::string('BOOK_TITLE') . ". Je betaling is ontvangen.\n\n"
             . "Bestelnummer: {$o['public_order_number']}\nAantal: {$qty}\nBetaald: {$total}\n"
             . "Afleveradres:\n" . OrderService::formatAddress($o) . "\n\n"
-            . 'Verwachte verschijning/verzending rond ' . Config::formatReleaseDate() . ".\n"
+            . "Zodra het boek onderweg is, krijg je bericht.\n"
             . $bonusText . "\n"
             . "Vragen? info@kornepot.nl\n\nGroet,\nKorne Pot\n";
         return [Mailer::wrapHtml('Bestelling bevestigd', $htmlBody), $text];
@@ -251,12 +250,12 @@ final class EmailTemplates
             . '<p>Aanvraagnummer: ' . e((string) $a['public_application_number']) . '<br>'
             . 'Gratis bestelnummer: ' . e((string) $o['public_order_number']) . '</p>'
             . '<p>Afleveradres:<br>' . nl2br(e(OrderService::formatAddress($o))) . '</p>'
-            . '<p>Verwachte verzending rond of na ' . e(Config::formatReleaseDate()) . '.</p>'
+            . '<p>Zodra het boek onderweg is, krijg je bericht.</p>'
             . '<p>Vragen? <a href="mailto:info@kornepot.nl">info@kornepot.nl</a></p>'
             . '<p>Groet,<br>Korne</p>';
         $text = "Hallo {$a['first_name']},\n\nDank je wel — je ontvangt een gratis exemplaar van " . Config::string('BOOK_TITLE') . ".\n"
             . "Aanvraag: {$a['public_application_number']}\nBestelling: {$o['public_order_number']}\n"
-            . OrderService::formatAddress($o) . "\n\nVerzending rond " . Config::formatReleaseDate() . ".\n\nGroet,\nKorne\n";
+            . OrderService::formatAddress($o) . "\n\nZodra het boek onderweg is, krijg je bericht.\n\nGroet,\nKorne\n";
         return [Mailer::wrapHtml('Gratis exemplaar', $htmlBody), $text];
     }
 
