@@ -39,7 +39,7 @@ final class Config
             'BOOK_CURRENCY' => 'EUR',
             'BOOK_PRESALE_END_DATE' => '2026-09-21',
             'BOOK_RELEASE_DATE' => '2026-10-05',
-            'BOOK_PRESENTATION_DATE' => '2026-10-05',
+            'BOOK_PRESENTATION_DATE' => '2026-10-19',
             'BOOK_PRESENTATION_TIME' => '19:30',
             'BOOK_ISBN' => '',
             'BOOK_PAGE_COUNT' => '',
@@ -284,7 +284,7 @@ final class Config
 
     public static function presentationDateImmutable(): ?\DateTimeImmutable
     {
-        return self::dateFromConfig('BOOK_PRESENTATION_DATE', '2026-10-05');
+        return self::dateFromConfig('BOOK_PRESENTATION_DATE', '2026-10-19');
     }
 
     /** Online boekpresentatie: datum + tijd (Europe/Amsterdam). */
@@ -327,7 +327,7 @@ final class Config
         return self::string('BOOK_PRESENTATION_TIME', '19:30');
     }
 
-    /** Bijv. "maandag 5 oktober 2026 om 19:30". */
+    /** Bijv. "maandag 19 oktober 2026 om 19:30". */
     public static function formatPresentationLabel(): string
     {
         $date = self::formatPresentationDate();

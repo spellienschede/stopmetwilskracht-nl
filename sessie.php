@@ -121,7 +121,7 @@ ob_start();
 <section class="section session-page" style="border-top:0;padding-top:2rem">
   <div class="wrap session-layout">
     <div class="session-copy">
-      <p class="eyebrow">Gratis online sessie · 30 minuten</p>
+      <p class="eyebrow">Gratis online sessie</p>
       <h1><?= e((string) $session['title']) ?></h1>
       <?php if (!empty($session['hosts'])): ?>
         <p class="session-hosts">Met <?= e((string) $session['hosts']) ?></p>

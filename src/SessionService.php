@@ -65,7 +65,7 @@ final class SessionService
 
     private static function nooitMeerTeDrukIntro(): string
     {
-        return 'Je agenda barst, je to-dolijst groeit — en toch schiet wat er écht toe doet erbij in. In 30 minuten laat Korné zien hoe je stopt met “te druk” als standaardmodus. Kort, concreet, gratis. Meld je aan; de Zoom-link volgt per mail.';
+        return 'Je agenda barst, je to-dolijst groeit — en toch schiet wat er écht toe doet erbij in. Korné laat zien hoe je stopt met “te druk” als standaardmodus. Kort, concreet, gratis. Meld je aan; de Zoom-link volgt per mail.';
     }
 
     /** @return array<string,mixed> */
@@ -77,7 +77,7 @@ final class SessionService
             'hosts' => 'Korné Pot',
             'intro' => self::nooitMeerTeDrukIntro(),
             'starts_at' => '2026-09-29 19:30:00',
-            'ends_at' => '2026-09-29 20:00:00',
+            'ends_at' => '',
             'meeting_url' => '',
             'signup_open' => true,
             'is_published' => true,
@@ -126,6 +126,25 @@ final class SessionService
                     $payload['meeting_url'] = (string) $existing['meeting_url'];
                 }
                 self::update((int) $existing['id'], $payload);
+                return;
+            }
+            // Drop hard "30 minuten" claim + vaste eindtijd (sessie is langer).
+            $currentIntro = (string) ($existing['intro'] ?? '');
+            $endsAt = (string) ($existing['ends_at'] ?? '');
+            $needsIntro = str_contains($currentIntro, 'In 30 minuten');
+            $needsEnd = $endsAt === '2026-09-29 20:00:00';
+            if ($needsIntro || $needsEnd) {
+                $pdo = Database::pdo();
+                if ($needsIntro && $needsEnd) {
+                    $stmt = $pdo->prepare('UPDATE live_sessions SET intro = ?, ends_at = NULL WHERE id = ?');
+                    $stmt->execute([self::nooitMeerTeDrukIntro(), (int) $existing['id']]);
+                } elseif ($needsIntro) {
+                    $stmt = $pdo->prepare('UPDATE live_sessions SET intro = ? WHERE id = ?');
+                    $stmt->execute([self::nooitMeerTeDrukIntro(), (int) $existing['id']]);
+                } else {
+                    $stmt = $pdo->prepare('UPDATE live_sessions SET ends_at = NULL WHERE id = ?');
+                    $stmt->execute([(int) $existing['id']]);
+                }
             }
             return;
         }

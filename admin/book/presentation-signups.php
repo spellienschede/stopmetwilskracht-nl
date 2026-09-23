@@ -16,7 +16,7 @@ $page = max(1, (int) ($_GET['page'] ?? 1));
 $limit = 100;
 $offset = ($page - 1) * $limit;
 $download = isset($_GET['download']);
-$eventDate = Config::string('BOOK_PRESENTATION_DATE', '2026-10-05');
+$eventDate = Config::string('BOOK_PRESENTATION_DATE', '2026-10-19');
 
 $where = ['event_date = ?'];
 $params = [$eventDate];

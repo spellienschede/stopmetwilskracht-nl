@@ -36,7 +36,7 @@ final class PresentationService
     {
         self::ensureSchema();
         $pdo = Database::pdo();
-        $eventDate = Config::string('BOOK_PRESENTATION_DATE', '2026-10-05');
+        $eventDate = Config::string('BOOK_PRESENTATION_DATE', '2026-10-19');
         $eventTime = Config::formatPresentationTime();
         $email = strtolower(trim($data['email']));
 
@@ -96,7 +96,7 @@ final class PresentationService
     {
         self::ensureSchema();
         if ($eventDate === null) {
-            $eventDate = Config::string('BOOK_PRESENTATION_DATE', '2026-10-05');
+            $eventDate = Config::string('BOOK_PRESENTATION_DATE', '2026-10-19');
         }
         $stmt = Database::pdo()->prepare(
             'SELECT COUNT(*) FROM presentation_signups WHERE event_date = ?'
