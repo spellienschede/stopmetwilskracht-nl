@@ -1,5 +1,6 @@
 <?php
 use Grippartner\Config;
+use Grippartner\SessionService;
 /** @var string $cover */
 /** @var string $productPhoto */
 /** @var string $authorPhoto */
@@ -15,6 +16,15 @@ $heroImage = $productPhoto !== '' ? $productPhoto : $cover;
 $countdown = Config::countdownLabel();
 $bookTitle = Config::string('BOOK_TITLE');
 $hook = Config::string('BOOK_HOOK');
+$liveSession = null;
+try {
+    $liveSession = SessionService::findBySlug('nooit-meer-te-druk');
+    if ($liveSession && !SessionService::isOpen($liveSession)) {
+        $liveSession = null;
+    }
+} catch (\Throwable $e) {
+    $liveSession = null;
+}
 ?>
 <section class="hero-band">
   <div class="wrap hero">
@@ -183,6 +193,17 @@ $hook = Config::string('BOOK_HOOK');
     </div>
   </div>
 </section>
+
+<?php if ($liveSession): ?>
+<section class="section section-paper" id="sessie">
+  <div class="wrap promo-panel">
+    <p class="promo-kicker">Gratis online sessie</p>
+    <h2><?= e((string) $liveSession['title']) ?> — <?= e(SessionService::formatWhenShort($liveSession)) ?></h2>
+    <p>Je agenda barst, je to-dolijst groeit — en toch schiet wat er écht toe doet erbij in. Kort, concreet, gratis. Meld je aan; de Zoom-link komt per mail.</p>
+    <p class="promo-panel-actions"><a class="btn btn-primary btn-lg" href="/sessie/nooit-meer-te-druk">Meld je aan voor de sessie</a></p>
+  </div>
+</section>
+<?php endif; ?>
 
 <?php if (Config::isPresentationOpen()): ?>
 <section class="section section-paper" id="boekpresentatie">

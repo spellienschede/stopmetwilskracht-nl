@@ -7,6 +7,7 @@
 
 use Grippartner\Config;
 use Grippartner\Security;
+use Grippartner\SessionService;
 
 $pageTitle = $title ?? (Config::string('BOOK_TITLE') . ' – boek van ' . Config::string('BOOK_AUTHOR'));
 $pageDesc = $description ?? (Config::string('BOOK_HOOK') . ' ' . Config::priceFormatted() . ' inclusief btw en verzending.');
@@ -25,6 +26,15 @@ $metaPixelEvents = $metaPixelEvents ?? [];
 $presaleActive = Config::isPresaleActive();
 $released = Config::isReleased();
 $presaleEndIso = Config::string('BOOK_PRESALE_END_DATE', '2026-09-29');
+$homeSession = null;
+try {
+    $homeSession = SessionService::findBySlug('nooit-meer-te-druk');
+    if ($homeSession && !SessionService::isOpen($homeSession)) {
+        $homeSession = null;
+    }
+} catch (\Throwable $e) {
+    $homeSession = null;
+}
 ?>
 <!DOCTYPE html>
 <html lang="nl">
@@ -142,6 +152,9 @@ $presaleEndIso = Config::string('BOOK_PRESALE_END_DATE', '2026-09-29');
     <a class="brand" href="/"><?= e(Config::string('BOOK_AUTHOR')) ?></a>
     <nav class="nav" aria-label="Hoofd">
       <a class="nav-link-desk" href="/#kopen"><?= e(Config::orderVerb()) ?></a>
+      <?php if ($homeSession): ?>
+      <a class="nav-link-desk" href="/sessie/nooit-meer-te-druk">Online sessie</a>
+      <?php endif; ?>
       <?php if (Config::isPresentationOpen()): ?>
       <a class="nav-link-desk" href="/boekpresentatie.php">Boekpresentatie</a>
       <?php endif; ?>
@@ -157,6 +170,9 @@ $presaleEndIso = Config::string('BOOK_PRESALE_END_DATE', '2026-09-29');
   <div class="wrap">
     <nav aria-label="Footer">
       <a href="<?= e($orderUrl) ?>"><?= e(Config::orderVerb()) ?></a>
+      <?php if ($homeSession): ?>
+      <a href="/sessie/nooit-meer-te-druk">Online sessie</a>
+      <?php endif; ?>
       <a href="/boekpresentatie.php">Boekpresentatie</a>
       <a href="/media">Mediakit</a>
       <a href="/#promo">Promo</a>
