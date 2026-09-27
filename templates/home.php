@@ -197,9 +197,9 @@ try {
 <?php if ($liveSession): ?>
 <section class="section section-paper" id="sessie">
   <div class="wrap promo-panel">
-    <p class="promo-kicker">Gratis online sessie</p>
+    <p class="promo-kicker">Gratis online sessie · 30 minuten</p>
     <h2><?= e((string) $liveSession['title']) ?> — <?= e(SessionService::formatWhenShort($liveSession)) ?></h2>
-    <p>Je agenda barst, je to-dolijst groeit — en toch schiet wat er écht toe doet erbij in. Kort, concreet, gratis. Meld je aan; de Zoom-link komt per mail.</p>
+    <p>In een half uur: eenvoudige technieken voor meer tijd voor wat belangrijk is, minder het gevoel van druk, en meer grip op je leven. De beste inzichten uit 1000+ boeken — zonder die allemaal te lezen.</p>
     <p class="promo-panel-actions"><a class="btn btn-primary btn-lg" href="/sessie/nooit-meer-te-druk">Meld je aan voor de sessie</a></p>
   </div>
 </section>

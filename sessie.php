@@ -132,7 +132,7 @@ ob_start();
         if ($cliffhangers !== []):
       ?>
         <div class="session-cliffhangers">
-          <p class="session-cliffhangers-label"><?= (string) ($session['slug'] ?? '') === '3-geheimen' ? 'Drie geheimen in de sessie:' : 'In deze sessie:' ?></p>
+          <p class="session-cliffhangers-label"><?= (string) ($session['slug'] ?? '') === '3-geheimen' ? 'Drie geheimen in de sessie:' : 'In deze 30 minuten:' ?></p>
           <ol>
             <?php foreach ($cliffhangers as $hook): ?>
               <li><?= e($hook) ?></li>

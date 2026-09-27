@@ -65,7 +65,11 @@ final class SessionService
 
     private static function nooitMeerTeDrukIntro(): string
     {
-        return 'Je agenda barst, je to-dolijst groeit — en toch schiet wat er écht toe doet erbij in. Korné laat zien hoe je stopt met “te druk” als standaardmodus. Kort, concreet, gratis. Meld je aan; de Zoom-link volgt per mail.';
+        return 'In slechts 30 minuten legt Korné eenvoudige technieken uit om meer tijd te hebben voor wat belangrijk is, '
+            . 'minder het gevoel te hebben dat je te druk bent, en zo meer grip op je leven te krijgen. '
+            . 'Deze sessie gaf hij vaker — de reacties zijn zeer positief, omdat je er concrete handvatten uit haalt. '
+            . 'De beste inzichten uit meer dan duizend boeken, zonder die allemaal te hoeven lezen. '
+            . 'Gratis. Meld je aan; de Zoom-link volgt per mail.';
     }
 
     /** @return array<string,mixed> */
@@ -77,7 +81,7 @@ final class SessionService
             'hosts' => 'Korné Pot',
             'intro' => self::nooitMeerTeDrukIntro(),
             'starts_at' => '2026-09-29 19:30:00',
-            'ends_at' => '',
+            'ends_at' => '2026-09-29 20:00:00',
             'meeting_url' => '',
             'signup_open' => true,
             'is_published' => true,
@@ -100,9 +104,10 @@ final class SessionService
                 'Wat bijna niemand ziet aan het verschil tussen druk zijn en controle hebben',
             ],
             'nooit-meer-te-druk' => [
-                'Waarom “ik heb het te druk” bijna nooit over tijd gaat',
-                'Het verschil tussen druk zijn en de belangrijke dingen doen',
-                'Hoe je in één week merkt dat je agenda weer van jou is',
+                'Eenvoudige technieken om meer tijd te hebben voor wat ertoe doet',
+                'Hoe je het gevoel van “te druk zijn” kleiner maakt — in de praktijk',
+                'Hoe dat zorgt voor meer grip op je leven',
+                'De beste inzichten uit 1000+ boeken, in een half uur — zonder die allemaal te lezen',
             ],
             default => [],
         };
@@ -128,23 +133,27 @@ final class SessionService
                 self::update((int) $existing['id'], $payload);
                 return;
             }
-            // Drop hard "30 minuten" claim + vaste eindtijd (sessie is langer).
-            $currentIntro = (string) ($existing['intro'] ?? '');
-            $endsAt = (string) ($existing['ends_at'] ?? '');
-            $needsIntro = str_contains($currentIntro, 'In 30 minuten');
-            $needsEnd = $endsAt === '2026-09-29 20:00:00';
-            if ($needsIntro || $needsEnd) {
-                $pdo = Database::pdo();
-                if ($needsIntro && $needsEnd) {
-                    $stmt = $pdo->prepare('UPDATE live_sessions SET intro = ?, ends_at = NULL WHERE id = ?');
-                    $stmt->execute([self::nooitMeerTeDrukIntro(), (int) $existing['id']]);
-                } elseif ($needsIntro) {
-                    $stmt = $pdo->prepare('UPDATE live_sessions SET intro = ? WHERE id = ?');
-                    $stmt->execute([self::nooitMeerTeDrukIntro(), (int) $existing['id']]);
-                } else {
-                    $stmt = $pdo->prepare('UPDATE live_sessions SET ends_at = NULL WHERE id = ?');
-                    $stmt->execute([(int) $existing['id']]);
-                }
+            // Intro + 30-min eindtijd synchroon houden met code
+            $pdo = Database::pdo();
+            $meetingUrl = !empty($existing['meeting_url']) ? (string) $existing['meeting_url'] : '';
+            $stmt = $pdo->prepare(
+                'UPDATE live_sessions
+                 SET intro = ?, ends_at = ?, hosts = ?, host1_name = ?, host1_role = ?, host1_photo = ?,
+                     host2_name = \'\', host2_role = \'\', host2_photo = \'\'
+                 WHERE id = ?'
+            );
+            $stmt->execute([
+                self::nooitMeerTeDrukIntro(),
+                '2026-09-29 20:00:00',
+                'Korné Pot',
+                'Korné Pot',
+                'Auteur Stop met wilskracht',
+                '/assets/img/sessions/korne-pot-adidas.jpg',
+                (int) $existing['id'],
+            ]);
+            if ($meetingUrl !== '') {
+                $pdo->prepare('UPDATE live_sessions SET meeting_url = ? WHERE id = ?')
+                    ->execute([$meetingUrl, (int) $existing['id']]);
             }
             return;
         }
