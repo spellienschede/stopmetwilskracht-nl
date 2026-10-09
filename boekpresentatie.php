@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use Grippartner\Config;
+use Grippartner\MetaCapi;
 use Grippartner\PresentationService;
 use Grippartner\RateLimiter;
 use Grippartner\Security;
@@ -9,10 +10,13 @@ use Grippartner\Validator;
 
 require __DIR__ . '/src/bootstrap.php';
 
+MetaCapi::captureBrowserIds();
+
 $errors = [];
 $success = false;
 $already = false;
 $publicNr = '';
+$metaPixelEvents = [];
 $data = Validator::normalizePresentationSignupInput([]);
 $open = Config::isPresentationOpen();
 $when = Config::formatPresentationLabel();
@@ -32,6 +36,28 @@ if (is_post() && $open) {
                 $success = true;
                 $already = !empty($row['_already']);
                 $publicNr = (string) ($row['public_signup_number'] ?? '');
+                if ($publicNr !== '' && !$already) {
+                    $leadEventId = 'presentation-lead:' . $publicNr;
+                    $tracked = !empty($_SESSION['meta_presentation_lead_tracked'][$publicNr]);
+                    if (!$tracked) {
+                        $metaPixelEvents = [[
+                            'Lead',
+                            [
+                                'content_name' => Config::string('BOOK_TITLE'),
+                                'content_category' => 'boekpresentatie',
+                                'content_ids' => ['boekpresentatie'],
+                                'status' => 'submitted',
+                            ],
+                            $leadEventId,
+                        ]];
+                        $_SESSION['meta_presentation_lead_tracked'][$publicNr] = true;
+                        try {
+                            MetaCapi::sendPresentationLead($row);
+                        } catch (Throwable $capiEx) {
+                            \Grippartner\Logger::error('Meta CAPI presentation lead failed', ['m' => $capiEx->getMessage()]);
+                        }
+                    }
+                }
             } catch (Throwable $e) {
                 \Grippartner\Logger::error('Presentation signup failed', ['m' => $e->getMessage()]);
                 $errors['form'] = 'Aanmelding kon niet worden opgeslagen. Probeer het opnieuw.';

@@ -149,6 +149,34 @@ final class MetaCapi
         );
     }
 
+    /** @param array<string,mixed> $signup presentation_signups row */
+    public static function sendPresentationLead(array $signup): bool
+    {
+        $public = (string) ($signup['public_signup_number'] ?? '');
+        if ($public === '') {
+            return false;
+        }
+        $name = trim((string) ($signup['name'] ?? ''));
+        $parts = preg_split('/\s+/', $name, 2) ?: [];
+
+        return self::send(
+            'Lead',
+            'presentation-lead:' . $public,
+            [
+                'content_name' => Config::string('BOOK_TITLE'),
+                'content_category' => 'boekpresentatie',
+                'content_ids' => ['boekpresentatie'],
+                'status' => 'submitted',
+            ],
+            self::userDataFromOrder([
+                'email' => (string) ($signup['email'] ?? ''),
+                'first_name' => (string) ($parts[0] ?? $name),
+                'last_name' => (string) ($parts[1] ?? ''),
+            ]),
+            Config::baseUrl() . '/boekpresentatie.php'
+        );
+    }
+
     /** @param array<string,mixed> $order */
     public static function sendInitiateCheckout(array $order): bool
     {
