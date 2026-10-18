@@ -35,9 +35,9 @@ function assert_true(bool $cond, string $msg): void
 
 echo "=== Config datumterminologie ===\n";
 assert_true(Config::string('BOOK_TITLE') === 'Grippartner', 'boek titel');
-$beforePresaleEnd = new DateTimeImmutable('2026-09-28', new DateTimeZone('Europe/Amsterdam'));
-$lastPresaleDay = new DateTimeImmutable('2026-09-29 12:00:00', new DateTimeZone('Europe/Amsterdam'));
-$afterPresale = new DateTimeImmutable('2026-09-30', new DateTimeZone('Europe/Amsterdam'));
+$beforePresaleEnd = new DateTimeImmutable('2026-10-18', new DateTimeZone('Europe/Amsterdam'));
+$lastPresaleDay = new DateTimeImmutable('2026-10-19 23:59:58', new DateTimeZone('Europe/Amsterdam'));
+$afterPresale = new DateTimeImmutable('2026-10-19 23:59:59', new DateTimeZone('Europe/Amsterdam'));
 assert_true(Config::isPresaleActive($beforePresaleEnd) === true, 'vóór pre-orderdeadline = pre-order actief');
 assert_true(Config::isPresaleActive($lastPresaleDay) === true, 'op laatste pre-orderdag = nog pre-order');
 assert_true(Config::isPresaleActive($afterPresale) === false, 'na pre-orderdeadline = geen pre-order meer');
