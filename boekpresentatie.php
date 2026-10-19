@@ -2,73 +2,16 @@
 declare(strict_types=1);
 
 use Grippartner\Config;
-use Grippartner\MetaCapi;
-use Grippartner\PresentationService;
-use Grippartner\RateLimiter;
-use Grippartner\Security;
-use Grippartner\Validator;
 
 require __DIR__ . '/src/bootstrap.php';
 
-MetaCapi::captureBrowserIds();
-
-$errors = [];
-$success = false;
-$already = false;
-$publicNr = '';
-$metaPixelEvents = [];
-$data = Validator::normalizePresentationSignupInput([]);
 $open = Config::isPresentationOpen();
 $when = Config::formatPresentationLabel();
-
-if (is_post() && $open) {
-    Security::requireCsrf();
-    if (Security::honeypotFilled()) {
-        $success = true;
-    } elseif (RateLimiter::tooMany('presentation:' . client_ip(), 8, 3600)) {
-        $errors['form'] = 'Te veel aanmeldingen. Probeer later opnieuw.';
-    } else {
-        $data = Validator::normalizePresentationSignupInput($_POST);
-        $errors = Validator::presentationSignup($_POST);
-        if ($errors === []) {
-            try {
-                $row = PresentationService::create($data);
-                $success = true;
-                $already = !empty($row['_already']);
-                $publicNr = (string) ($row['public_signup_number'] ?? '');
-                if ($publicNr !== '' && !$already) {
-                    $leadEventId = 'presentation-lead:' . $publicNr;
-                    $tracked = !empty($_SESSION['meta_presentation_lead_tracked'][$publicNr]);
-                    if (!$tracked) {
-                        $metaPixelEvents = [[
-                            'Lead',
-                            [
-                                'content_name' => Config::string('BOOK_TITLE'),
-                                'content_category' => 'boekpresentatie',
-                                'content_ids' => ['boekpresentatie'],
-                                'status' => 'submitted',
-                            ],
-                            $leadEventId,
-                        ]];
-                        $_SESSION['meta_presentation_lead_tracked'][$publicNr] = true;
-                        try {
-                            MetaCapi::sendPresentationLead($row);
-                        } catch (Throwable $capiEx) {
-                            \Grippartner\Logger::error('Meta CAPI presentation lead failed', ['m' => $capiEx->getMessage()]);
-                        }
-                    }
-                }
-            } catch (Throwable $e) {
-                \Grippartner\Logger::error('Presentation signup failed', ['m' => $e->getMessage()]);
-                $errors['form'] = 'Aanmelding kon niet worden opgeslagen. Probeer het opnieuw.';
-            }
-        }
-    }
-}
+$zoomUrl = 'https://zoom.us/meeting/register/NFDk7VBMSK6A0Xzk0gB6Gg';
 
 $title = 'Online boekpresentatie – ' . Config::string('BOOK_TITLE');
 $description = 'Meld je aan voor de online boekpresentatie van ' . Config::string('BOOK_TITLE')
-    . ' op ' . $when . '. Gratis, live via Zoom/Teams of vergelijkbaar.';
+    . ' op ' . $when . '. Gratis, via Zoom. De link krijg je meteen per mail.';
 $canonical = Config::baseUrl() . '/boekpresentatie.php';
 
 ob_start();
@@ -77,37 +20,14 @@ ob_start();
   <div class="wrap" style="max-width:40rem">
     <p class="eyebrow">Online boekpresentatie</p>
     <h1><?= e(Config::string('BOOK_TITLE')) ?></h1>
-    <p class="lede">Op <?= e($when) ?> presenteer ik het boek online. Kort, persoonlijk, en met ruimte voor vragen. Gratis — meld je hieronder aan, dan stuur ik je de link.</p>
-
-    <?php if ($success): ?>
-      <div class="status-box status-ok">
-        <?php if ($already): ?>
-          <p>Je stond al op de lijst<?= $publicNr !== '' ? ' (nummer ' . e($publicNr) . ')' : '' ?>. De link volgt dichter bij de datum.</p>
-        <?php else: ?>
-          <p>Bedankt. Je aanmelding is ontvangen<?= $publicNr !== '' ? ' (nummer ' . e($publicNr) . ')' : '' ?>.</p>
-          <p>Je krijgt een bevestiging per mail. De online-link stuur ik dichter bij <?= e(Config::formatPresentationDateShort()) ?>.</p>
-        <?php endif; ?>
-        <p><a href="/">Terug naar de homepage</a></p>
-      </div>
-    <?php elseif (!$open): ?>
+    <p class="lede">Op <?= e($when) ?> presenteer ik het boek online. Kort, persoonlijk, en met ruimte voor vragen. Gratis.</p>
+    <?php if ($open): ?>
+      <p>Meld je aan via Zoom. Je krijgt de link meteen per mail.</p>
+      <p style="margin-top:1.25rem"><a class="btn btn-primary" href="<?= e($zoomUrl) ?>">Aanmelden via Zoom</a></p>
+    <?php else: ?>
       <div class="status-box status-bad">
         <p>Aanmelden voor deze presentatie is gesloten.</p>
         <p><a href="/">Terug naar de homepage</a></p>
-      </div>
-    <?php else: ?>
-      <div class="form-card" style="margin-top:1.25rem">
-        <p><strong>Wanneer:</strong> <?= e($when) ?><br>
-          <strong>Waar:</strong> online (link volgt per mail)</p>
-        <?php if ($errors): ?><div class="errors" role="alert"><ul><?php foreach ($errors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
-        <form method="post">
-          <?= Security::csrfField() ?>
-          <div class="hp" aria-hidden="true"><label>Website<input type="text" name="website_url" tabindex="-1" autocomplete="off"></label></div>
-          <div class="form-grid">
-            <label>Naam<input name="name" required maxlength="160" value="<?= e((string) ($data['name'] ?? '')) ?>" autocomplete="name"></label>
-            <label>E-mailadres<input type="email" name="email" required maxlength="255" value="<?= e((string) ($data['email'] ?? '')) ?>" autocomplete="email"></label>
-          </div>
-          <p style="margin-top:1.25rem"><button class="btn btn-primary" type="submit">Ja, ik meld me aan</button></p>
-        </form>
       </div>
     <?php endif; ?>
   </div>
