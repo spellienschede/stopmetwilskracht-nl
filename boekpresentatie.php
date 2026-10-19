@@ -39,7 +39,7 @@ ob_start();
   <div class="wrap" style="max-width:40rem">
     <p class="eyebrow">Online boekpresentatie</p>
     <h1><?= e(Config::string('BOOK_TITLE')) ?></h1>
-    <p class="lede">Op <?= e($when) ?> presenteerde ik het boek online. De opname kun je hier terugkijken.</p>
+    <p class="lede">Op <?= e($when) ?> presenteerde ik in 25 minuten mijn boek &ldquo;<?= e(Config::string('BOOK_TITLE')) ?>&rdquo;. Terugkijken kost dus 25 minuten of met versneld afspelen nog minder :) De opname kan je hier terugkijken.</p>
     <p>Vul je mailadres in. Dan krijg je de video.</p>
     <?php if ($replayError !== ''): ?>
       <div class="errors"><p><?= e($replayError) ?></p></div>
