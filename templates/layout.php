@@ -155,9 +155,7 @@ try {
       <?php if ($homeSession): ?>
       <a class="nav-link-desk" href="/sessie/nooit-meer-te-druk">Online sessie</a>
       <?php endif; ?>
-      <?php if (Config::isPresentationOpen()): ?>
       <a class="nav-link-desk" href="/boekpresentatie.php">Boekpresentatie</a>
-      <?php endif; ?>
       <a class="nav-promo" href="/#promo">Gratis via promo</a>
       <a class="btn btn-primary btn-nav-order" href="<?= e($orderUrl) ?>"><?= $presaleActive ? '€ 10 korting' : e(Config::orderCta()) ?></a>
     </nav>

@@ -2,16 +2,35 @@
 declare(strict_types=1);
 
 use Grippartner\Config;
+use Grippartner\MailingList;
 
 require __DIR__ . '/src/bootstrap.php';
 
-$open = Config::isPresentationOpen();
-$when = Config::formatPresentationLabel();
-$zoomUrl = 'https://zoom.us/meeting/register/NFDk7VBMSK6A0Xzk0gB6Gg';
+const BP_REPLAY_URL = 'https://www.kornepot.nl/opname/8529b2989d10f490b0e5c8d5';
 
-$title = 'Online boekpresentatie – ' . Config::string('BOOK_TITLE');
-$description = 'Meld je aan voor de online boekpresentatie van ' . Config::string('BOOK_TITLE')
-    . ' op ' . $when . '. Gratis, via Zoom. De link krijg je meteen per mail.';
+$replayError = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $honeypot = trim((string) ($_POST['website'] ?? ''));
+    $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+    if ($honeypot !== '') {
+        $replayError = 'Dit formulier kon niet worden verstuurd.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $replayError = 'Vul een geldig e-mailadres in.';
+    } else {
+        try {
+            MailingList::subscribe($email, 'lezer', '-', 'boekpresentatie-replay', false);
+            header('Location: ' . BP_REPLAY_URL, true, 303);
+            exit;
+        } catch (Throwable $e) {
+            $replayError = 'Opslaan lukte niet. Probeer het nog eens.';
+        }
+    }
+}
+
+$when = Config::formatPresentationLabel();
+$title = 'Boekpresentatie terugkijken – ' . Config::string('BOOK_TITLE');
+$description = 'Kijk de online boekpresentatie van ' . Config::string('BOOK_TITLE')
+    . ' terug. Vul je e-mailadres in voor toegang tot de opname.';
 $canonical = Config::baseUrl() . '/boekpresentatie.php';
 
 ob_start();
@@ -20,16 +39,23 @@ ob_start();
   <div class="wrap" style="max-width:40rem">
     <p class="eyebrow">Online boekpresentatie</p>
     <h1><?= e(Config::string('BOOK_TITLE')) ?></h1>
-    <p class="lede">Op <?= e($when) ?> presenteer ik het boek online. Kort, persoonlijk, en met ruimte voor vragen. Gratis.</p>
-    <?php if ($open): ?>
-      <p>Meld je aan via Zoom. Je krijgt de link meteen per mail.</p>
-      <p style="margin-top:1.25rem"><a class="btn btn-primary" href="<?= e($zoomUrl) ?>">Aanmelden via Zoom</a></p>
-    <?php else: ?>
-      <div class="status-box status-bad">
-        <p>Aanmelden voor deze presentatie is gesloten.</p>
-        <p><a href="/">Terug naar de homepage</a></p>
-      </div>
+    <p class="lede">Op <?= e($when) ?> presenteerde ik het boek online. De opname kun je hier terugkijken.</p>
+    <p>Vul je e-mailadres in. Daarna kom je meteen bij de video.</p>
+    <?php if ($replayError !== ''): ?>
+      <div class="errors"><p><?= e($replayError) ?></p></div>
     <?php endif; ?>
+    <form method="post" action="/boekpresentatie.php">
+      <p class="hp" style="position:absolute;left:-9999px" aria-hidden="true">
+        <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+      </p>
+      <div class="form-grid">
+        <label>E-mailadres
+          <input type="email" name="email" required autocomplete="email" value="<?= e((string) ($_POST['email'] ?? '')) ?>">
+        </label>
+        <p><button class="btn btn-primary" type="submit">Opname bekijken</button></p>
+        <p class="hint">Je adres komt op de mailinglijst van Korné. Uitschrijven kan in elke mail.</p>
+      </div>
+    </form>
   </div>
 </section>
 <?php

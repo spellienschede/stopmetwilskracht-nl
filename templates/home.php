@@ -205,16 +205,14 @@ try {
 </section>
 <?php endif; ?>
 
-<?php if (Config::isPresentationOpen()): ?>
 <section class="section section-paper" id="boekpresentatie">
   <div class="wrap promo-panel">
-    <p class="promo-kicker">Online</p>
-    <h2>Boekpresentatie — <?= e(Config::formatPresentationDateShort()) ?> om <?= e(Config::formatPresentationTime()) ?></h2>
-    <p>Op <?= e(Config::formatPresentationLabel()) ?> presenteer ik <em><?= e($bookTitle) ?></em> online. Kort, persoonlijk, met ruimte voor vragen. Gratis — meld je aan via Zoom, dan krijg je de link meteen per mail.</p>
-    <p class="promo-panel-actions"><a class="btn btn-primary btn-lg" href="https://zoom.us/meeting/register/NFDk7VBMSK6A0Xzk0gB6Gg">Aanmelden via Zoom</a></p>
+    <p class="promo-kicker">Opname</p>
+    <h2>Boekpresentatie terugkijken</h2>
+    <p>De presentatie van <em><?= e($bookTitle) ?></em> op <?= e(Config::formatPresentationLabel()) ?> is geweest. Vul je e-mailadres in, dan kun je de opname meteen bekijken.</p>
+    <p class="promo-panel-actions"><a class="btn btn-primary btn-lg" href="/boekpresentatie.php">Opname terugkijken</a></p>
   </div>
 </section>
-<?php endif; ?>
 
 <section class="section section-yellow" id="promo">
   <div class="wrap promo-panel promo-panel-featured">
@@ -255,7 +253,7 @@ try {
       <summary>Tot wanneer kan ik pre-orderen?</summary>
       <p>Pre-order is nu open tot <?= e($presaleEnd) ?>. Je krijgt dan € 10 korting (<?= e(Config::priceFormatted()) ?> i.p.v. <?= e(Config::regularPriceFormatted()) ?>) én 2 bonussen. Daarna is het boek verkrijgbaar voor <?= e(Config::regularPriceFormatted()) ?> — zonder die pre-orderbonussen.</p>
     </details>
-    <details><summary>Wanneer wordt het boek verzonden?</summary><p>Zodra het boek onderweg is, krijg je bericht. De online boekpresentatie is op <?= e(Config::formatPresentationLabel()) ?> — <a href="https://zoom.us/meeting/register/NFDk7VBMSK6A0Xzk0gB6Gg">meld je gratis aan via Zoom</a>.</p></details>
+    <details><summary>Wanneer wordt het boek verzonden?</summary><p>Zodra het boek onderweg is, krijg je bericht. De online boekpresentatie was op <?= e(Config::formatPresentationLabel()) ?>. <a href="/boekpresentatie.php">De opname kun je terugkijken</a> na het invullen van je e-mailadres.</p></details>
     <?php if ($presaleActive): ?>
     <details>
       <summary>Welke bonussen krijg ik bij pre-order?</summary>
@@ -275,7 +273,7 @@ try {
     <details><summary>Is <?= e($price) ?> inclusief verzending?</summary><p>Ja. <?= e($price) ?> inclusief btw en verzending.</p></details>
     <details>
       <summary>Hoe werkt de online boekpresentatie?</summary>
-      <p>Op <?= e(Config::formatPresentationLabel()) ?> presenteer ik het boek live online. Aanmelden is gratis <a href="https://zoom.us/meeting/register/NFDk7VBMSK6A0Xzk0gB6Gg">via Zoom</a>. Na het aanmelden stuurt Zoom je de link per mail.</p>
+      <p>De presentatie was op <?= e(Config::formatPresentationLabel()) ?>. <a href="/boekpresentatie.php">Vul je e-mailadres in</a> om de opname terug te kijken.</p>
     </details>
     <details>
       <summary>Hoe werkt de gratis promo?</summary>
