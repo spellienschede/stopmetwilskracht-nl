@@ -53,7 +53,6 @@ ob_start();
           <input type="email" name="email" required autocomplete="email" value="<?= e((string) ($_POST['email'] ?? '')) ?>">
         </label>
         <p><button class="btn btn-primary" type="submit">Opname bekijken</button></p>
-        <p class="hint">Je adres komt op de mailinglijst van Korné. Uitschrijven kan in elke mail.</p>
       </div>
     </form>
   </div>
