@@ -40,7 +40,7 @@ ob_start();
     <p class="eyebrow">Online boekpresentatie</p>
     <h1><?= e(Config::string('BOOK_TITLE')) ?></h1>
     <p class="lede">Op <?= e($when) ?> presenteerde ik het boek online. De opname kun je hier terugkijken.</p>
-    <p>Vul je e-mailadres in. Daarna kom je meteen bij de video.</p>
+    <p>Vul je mailadres in. Dan krijg je de video.</p>
     <?php if ($replayError !== ''): ?>
       <div class="errors"><p><?= e($replayError) ?></p></div>
     <?php endif; ?>
