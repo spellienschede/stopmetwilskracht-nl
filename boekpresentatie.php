@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 use Grippartner\Config;
+use Grippartner\Logger;
+use Grippartner\Mailer;
 use Grippartner\MailingList;
 
 require __DIR__ . '/src/bootstrap.php';
@@ -19,11 +21,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             MailingList::subscribe($email, 'lezer', '-', 'boekpresentatie-replay', false);
+            bpNotifyReplayWatch($email);
             header('Location: ' . BP_REPLAY_URL, true, 303);
             exit;
         } catch (Throwable $e) {
             $replayError = 'Opslaan lukte niet. Probeer het nog eens.';
         }
+    }
+}
+
+function bpNotifyReplayWatch(string $email): void
+{
+    try {
+        $host = (string) parse_url(Config::baseUrl(), PHP_URL_HOST);
+        if ($host === '') {
+            $host = 'stopmetwilskracht.nl';
+        }
+        $subject = 'Iemand kijkt de boekpresentatie terug';
+        $text = "Dit adres is ingevuld op {$host}/boekpresentatie:\n\n{$email}\n";
+        $html = '<p>Dit adres is ingevuld op <strong>' . e($host) . '/boekpresentatie</strong>:</p>'
+            . '<p>' . e($email) . '</p>';
+        Mailer::send(Mailer::adminEmail(), $subject, Mailer::wrapHtml($subject, $html), $text);
+    } catch (Throwable $e) {
+        Logger::error('Replay-melding mislukt', ['error' => $e->getMessage()]);
     }
 }
 
