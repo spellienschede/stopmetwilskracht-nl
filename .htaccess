@@ -13,6 +13,8 @@ DirectoryIndex index.php index.html
   RewriteRule ^\.env$ - [F,L]
   RewriteRule ^composer\.(json|lock|phar)$ - [F,L]
   RewriteRule ^media/?$ /media.php [L]
+  RewriteRule ^webinar/(bedankt|agenda)/?$ /webinar.php [L,QSA]
+  RewriteRule ^webinar/?$ /webinar.php [L,QSA]
   RewriteRule ^sessie/([a-z0-9\-]+)/?$ /sessie.php?slug=$1 [L,QSA]
 </IfModule>
 

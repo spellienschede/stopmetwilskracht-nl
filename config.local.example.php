@@ -42,4 +42,7 @@ return [
     'MEDIA_CONTACT_EMAIL' => 'info@kornepot.nl',
     'META_PIXEL_ID' => '',
     'GA_MEASUREMENT_ID' => '',
+
+    // Optioneel: Zoom- of Meet-link in de bevestigingsmail. Leeg = de link volgt later.
+    'WEBINAR_JOIN_URL' => '',
 ];
