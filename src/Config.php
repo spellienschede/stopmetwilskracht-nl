@@ -102,22 +102,56 @@ final class Config
         }
 
         // Optional runtime override for CAPI token (written via admin tool).
-        $capiFile = dirname(__DIR__) . '/storage/meta_capi_token.php';
-        if (is_readable($capiFile)) {
-            /** @var mixed $capiValues */
-            $capiValues = include $capiFile;
-            if (is_array($capiValues)) {
-                foreach (['META_CAPI_ACCESS_TOKEN', 'META_CAPI_TEST_EVENT_CODE'] as $key) {
-                    if (!empty($capiValues[$key]) && is_string($capiValues[$key])) {
-                        self::$values[$key] = $capiValues[$key];
-                    }
-                }
-            }
-        }
+        self::readCapiFile();
 
         $tz = (string) (self::$values['TIMEZONE'] ?? 'Europe/Amsterdam');
         date_default_timezone_set($tz);
         self::$loaded = true;
+    }
+
+    /** Lees storage/meta_capi_token.php opnieuw, ook na een schrijfactie in hetzelfde verzoek. */
+    public static function reloadCapiFile(): void
+    {
+        if (!self::$loaded) {
+            self::load();
+            return;
+        }
+        self::readCapiFile();
+    }
+
+    private static function readCapiFile(): void
+    {
+        $capiFile = dirname(__DIR__) . '/storage/meta_capi_token.php';
+        if (!is_readable($capiFile)) {
+            return;
+        }
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($capiFile, true);
+        }
+        /** @var mixed $capiValues */
+        $capiValues = include $capiFile;
+        if (!is_array($capiValues)) {
+            return;
+        }
+        foreach (['META_CAPI_ACCESS_TOKEN', 'META_CAPI_TOKEN', 'META_CAPI_TEST_EVENT_CODE', 'META_TEST_EVENT_CODE'] as $key) {
+            if (!empty($capiValues[$key]) && is_string($capiValues[$key])) {
+                self::$values[$key] = $capiValues[$key];
+            }
+        }
+        self::aliasCapiValue('META_CAPI_TOKEN', 'META_CAPI_ACCESS_TOKEN');
+        self::aliasCapiValue('META_TEST_EVENT_CODE', 'META_CAPI_TEST_EVENT_CODE');
+    }
+
+    /** Houd de twee namen voor hetzelfde geheim gelijk, welke er ook gezet is. */
+    private static function aliasCapiValue(string $left, string $right): void
+    {
+        $a = trim((string) (self::$values[$left] ?? ''));
+        $b = trim((string) (self::$values[$right] ?? ''));
+        if ($a === '' && $b !== '') {
+            self::$values[$left] = $b;
+        } elseif ($b === '' && $a !== '') {
+            self::$values[$right] = $a;
+        }
     }
 
     private static function loadEnvFile(string $path): void

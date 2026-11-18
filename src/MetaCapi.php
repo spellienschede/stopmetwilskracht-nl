@@ -77,9 +77,54 @@ final class MetaCapi
      */
     public static function sendWebinarRegistration(string $eventId, array $userData, string $eventSourceUrl): bool
     {
-        if ($eventId === '') {
-            return false;
+        return self::dispatchWebinarRegistration($eventId, $userData, $eventSourceUrl, null)['ok'];
+    }
+
+    /**
+     * Eén test-CompleteRegistration. Het antwoord is veilig om te tonen: geen token.
+     *
+     * @return array{ok:bool,detail:string}
+     */
+    public static function testWebinarRegistration(string $testCode): array
+    {
+        $testCode = trim($testCode);
+        if ($testCode === '') {
+            return ['ok' => false, 'detail' => 'Vul een test event code in. Zonder code zou dit een live event worden.'];
         }
+        $result = self::dispatchWebinarRegistration(
+            'webinar-test-' . bin2hex(random_bytes(8)),
+            [
+                'em' => 'capi-test@stopmetwilskracht.nl',
+                'fn' => 'test',
+                'client_ip_address' => client_ip(),
+                'client_user_agent' => (string) ($_SERVER['HTTP_USER_AGENT'] ?? 'StopMetWilskracht-admin'),
+            ],
+            rtrim(Config::baseUrl(), '/') . '/webinar',
+            $testCode
+        );
+        return [
+            'ok' => $result['ok'],
+            'detail' => self::publicCapiDetail($result['status'], $result['body']),
+        ];
+    }
+
+    /**
+     * @param array<string,string> $userData
+     * @return array{ok:bool,status:int,body:string}
+     */
+    private static function dispatchWebinarRegistration(
+        string $eventId,
+        array $userData,
+        string $eventSourceUrl,
+        ?string $testCodeOverride
+    ): array {
+        $fail = static function (int $status, string $body): array {
+            return ['ok' => false, 'status' => $status, 'body' => $body];
+        };
+        if ($eventId === '') {
+            return $fail(0, 'Geen event-id.');
+        }
+        Config::reloadCapiFile();
         try {
             $token = Config::string('META_CAPI_TOKEN');
             if ($token === '') {
@@ -87,7 +132,7 @@ final class MetaCapi
             }
             $pixelId = WebinarService::PIXEL_ID;
             if ($token === '' || $pixelId === '') {
-                return false;
+                return $fail(0, 'Geen CAPI-token opgeslagen.');
             }
 
             $event = [
@@ -104,9 +149,12 @@ final class MetaCapi
                 ],
             ];
             $payload = ['data' => [$event]];
-            $testCode = Config::string('META_TEST_EVENT_CODE');
+            $testCode = $testCodeOverride ?? '';
             if ($testCode === '') {
-                $testCode = Config::string('META_CAPI_TEST_EVENT_CODE');
+                $testCode = Config::string('META_TEST_EVENT_CODE');
+                if ($testCode === '') {
+                    $testCode = Config::string('META_CAPI_TEST_EVENT_CODE');
+                }
             }
             $host = $_SERVER['HTTP_HOST'] ?? '';
             $localHost = is_string($host) && (
@@ -115,7 +163,7 @@ final class MetaCapi
                 || str_ends_with($host, '.test')
             );
             if ($localHost && $testCode === '') {
-                return false;
+                return $fail(0, 'Lokaal zonder testcode niet verstuurd.');
             }
             if ($testCode !== '') {
                 $payload['test_event_code'] = $testCode;
@@ -124,7 +172,7 @@ final class MetaCapi
             $url = 'https://graph.facebook.com/v21.0/' . rawurlencode($pixelId) . '/events?access_token=' . rawurlencode($token);
             $ch = curl_init($url);
             if ($ch === false) {
-                return false;
+                return $fail(0, 'Kon geen verbinding voorbereiden.');
             }
             curl_setopt_array($ch, [
                 CURLOPT_POST => true,
@@ -138,20 +186,50 @@ final class MetaCapi
             $errno = curl_errno($ch);
             $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
+            $body = is_string($raw) ? $raw : '';
 
-            if ($errno !== 0 || $status >= 400) {
+            if ($errno !== 0 || $status >= 400 || $status === 0) {
                 Logger::error('Meta CAPI webinar mislukt', [
                     'status' => $status,
                     'errno' => $errno,
-                    'body' => is_string($raw) ? substr($raw, 0, 300) : null,
+                    'body' => substr(self::redactSecrets($body), 0, 300),
                 ]);
-                return false;
+                return $fail($status, $body !== '' ? $body : 'Geen antwoord van Meta.');
             }
-            return true;
+            return ['ok' => true, 'status' => $status, 'body' => $body];
         } catch (\Throwable $e) {
             Logger::error('Meta CAPI webinar exception', ['error' => $e->getMessage()]);
-            return false;
+            return $fail(0, 'Versturen mislukt.');
         }
+    }
+
+    private static function publicCapiDetail(int $status, string $body): string
+    {
+        $safe = self::redactSecrets($body);
+        $decoded = json_decode($safe, true);
+        if (is_array($decoded) && isset($decoded['events_received'])) {
+            $received = (int) $decoded['events_received'];
+            $trace = isset($decoded['fbtrace_id']) ? (string) $decoded['fbtrace_id'] : '';
+            $line = 'events_received: ' . $received;
+            if ($trace !== '') {
+                $line .= ' (fbtrace_id ' . $trace . ')';
+            }
+            return $line;
+        }
+        if (is_array($decoded) && isset($decoded['error']) && is_array($decoded['error'])) {
+            $message = (string) ($decoded['error']['message'] ?? 'Meta gaf een fout.');
+            $code = (string) ($decoded['error']['code'] ?? '');
+            return trim('Meta-fout' . ($code !== '' ? ' ' . $code : '') . ': ' . $message);
+        }
+        if ($status > 0) {
+            return 'HTTP ' . $status . ': ' . substr($safe, 0, 400);
+        }
+        return $safe !== '' ? substr($safe, 0, 400) : 'Geen antwoord van Meta.';
+    }
+
+    private static function redactSecrets(string $text): string
+    {
+        return (string) preg_replace('/EA[A-Za-z0-9]{8,}/', '[token]', $text);
     }
 
     /** @param array<string,mixed> $order */
