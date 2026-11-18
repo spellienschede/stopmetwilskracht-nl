@@ -312,20 +312,6 @@ $eventLd = [
     .kaart h2 { margin: 0 0 .35rem; color: var(--nacht); font-size: 1.35rem; letter-spacing: -.03em; }
     .kaart .waarom { margin: 0 0 .85rem; color: var(--nacht); font-size: 1rem; }
     .kaart .sub { margin: 0 0 1rem; color: var(--zacht); font-size: .95rem; }
-    .boekje {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: .85rem;
-      margin: .1rem 0 1.1rem;
-    }
-    .boekje img {
-      width: 104px;
-      height: auto;
-      display: block;
-      flex: 0 0 auto;
-      border-radius: 3px;
-    }
     .sticker {
       position: absolute;
       z-index: 2;
@@ -492,9 +478,6 @@ $eventLd = [
         <p class="sticker"><span>Bonus</span><small>Handleiding jaarreview</small></p>
         <h2>Meld je gratis aan</h2>
         <p class="sub"><?= e(WebinarService::when()) ?>. Je krijgt meteen een bevestiging.</p>
-        <div class="boekje">
-          <img src="/assets/img/jaarreview-boekje.jpg" width="681" height="1081" alt="Boekje Jaarreview">
-        </div>
         <?php if ($error !== ''): ?>
           <p class="fout" role="alert"><?= e($error) ?></p>
         <?php endif; ?>
