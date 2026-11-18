@@ -311,6 +311,35 @@ $eventLd = [
     .kaart h2 { margin: 0 0 .35rem; color: var(--nacht); font-size: 1.35rem; letter-spacing: -.03em; }
     .kaart .waarom { margin: 0 0 .85rem; color: var(--nacht); font-size: 1rem; }
     .kaart .sub { margin: 0 0 1rem; color: var(--zacht); font-size: .95rem; }
+    .boekje {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: .85rem;
+      margin: .1rem 0 1.1rem;
+    }
+    .boekje img {
+      width: 104px;
+      height: auto;
+      display: block;
+      flex: 0 0 auto;
+      border-radius: 3px;
+    }
+    .sticker {
+      margin: 0;
+      max-width: 9.4rem;
+      transform: rotate(-8deg);
+      background: var(--geel);
+      color: var(--nacht);
+      font-weight: 800;
+      font-size: .92rem;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+      padding: .55rem .7rem;
+      border: 2.5px solid var(--nacht);
+      border-radius: 3px;
+      box-shadow: 4px 4px 0 var(--nacht);
+    }
     label { display: block; font-size: .82rem; font-weight: 800; color: var(--nacht); margin-bottom: .3rem; }
     .veld { margin: 0 0 .75rem; }
     input[type="text"], input[type="email"] {
@@ -438,7 +467,11 @@ $eventLd = [
         <p class="sub">Geen mail ontvangen? <a href="/webinar">Meld je opnieuw aan</a> met hetzelfde adres, dan sturen we de bevestiging nog een keer.</p>
       <?php else: ?>
         <h2>Meld je gratis aan</h2>
-        <p class="sub"><?= e(WebinarService::when()) ?>. Je krijgt meteen een bevestiging. Ben je erbij, dan krijg je de handleiding jaarreview, gratis.</p>
+        <p class="sub"><?= e(WebinarService::when()) ?>. Je krijgt meteen een bevestiging.</p>
+        <div class="boekje">
+          <img src="/assets/img/jaarreview-boekje.jpg" width="681" height="1081" alt="Boekje Jaarreview">
+          <p class="sticker">Bonus: Handleiding jaarreview</p>
+        </div>
         <?php if ($error !== ''): ?>
           <p class="fout" role="alert"><?= e($error) ?></p>
         <?php endif; ?>
