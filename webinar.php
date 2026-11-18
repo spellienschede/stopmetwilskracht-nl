@@ -34,6 +34,10 @@ $error = '';
 $voornaam = trim((string) ($_POST['voornaam'] ?? ''));
 $email = trim((string) ($_POST['email'] ?? ''));
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && !$isThanks && !$isAgenda) {
+    WebinarService::rememberVisit($_GET);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isThanks) {
     $honeypot = trim((string) ($_POST['website'] ?? ''));
     if ($honeypot !== '') {
@@ -44,12 +48,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isThanks) {
         $error = 'Vernieuw de pagina en probeer het nog eens.';
     } else {
         try {
-            $result = WebinarService::register($voornaam, $email, client_ip());
+            $result = WebinarService::register(
+                $voornaam,
+                $email,
+                client_ip(),
+                WebinarService::attributionFromPost($_POST)
+            );
         } catch (Throwable $e) {
             Logger::error('Webinar-inschrijving onverwacht', ['error' => $e->getMessage()]);
             $result = ['ok' => false, 'error' => 'Inschrijven lukt op dit moment niet. Probeer het over een paar minuten opnieuw.'];
         }
         if ($result['ok']) {
+            if (empty($result['existing']) && $result['event_id'] !== '') {
+                $_SESSION['webinar_track_event_id'] = $result['event_id'];
+            }
             header('Location: /webinar/bedankt?t=' . rawurlencode($result['token']), true, 303);
             exit;
         }
@@ -58,13 +70,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isThanks) {
 }
 
 $thanks = $isThanks ? WebinarService::findByToken((string) ($_GET['t'] ?? '')) : null;
+$trackEventId = '';
+if ($isThanks && $thanks !== null && !empty($_SESSION['webinar_track_event_id'])) {
+    $trackEventId = (string) $_SESSION['webinar_track_event_id'];
+    unset($_SESSION['webinar_track_event_id']);
+}
+$attribution = WebinarService::attributionForForm();
 $joinUrl = WebinarService::joinUrl();
 $pageUrl = rtrim(Config::baseUrl(), '/') . '/webinar';
 $title = WebinarService::TITLE . ' | Stop met wilskracht';
 $description = 'Voor een afspraak met iemand anders maak je tijd. In 30 minuten laat Korne Pot zien hoe je diezelfde kracht gebruikt voor iets wat jij belangrijk vindt. Dinsdag 1 december 2026, 19:30.';
 $ga = Config::string('GA_MEASUREMENT_ID');
-$pixelId = Config::string('META_PIXEL_ID');
-$pixelEvent = ($isThanks && $thanks !== null) ? (string) $thanks['token'] : '';
+$pixelId = WebinarService::PIXEL_ID;
 
 $eventLd = [
     '@context' => 'https://schema.org',
@@ -115,10 +132,13 @@ $eventLd = [
   'https://connect.facebook.net/en_US/fbevents.js');
   fbq('init', <?= json_encode($pixelId, JSON_UNESCAPED_UNICODE) ?>);
   fbq('track', 'PageView');
-  <?php if ($pixelEvent !== ''): ?>
-  fbq('track', 'CompleteRegistration', {}, {eventID: <?= json_encode($pixelEvent, JSON_UNESCAPED_UNICODE) ?>});
+  <?php if ($trackEventId !== ''): ?>
+  fbq('track', 'CompleteRegistration', {content_name: 'Webinar 1 december 2026', status: 'registered', value: 0, currency: 'EUR'}, {eventID: <?= json_encode($trackEventId, JSON_UNESCAPED_UNICODE) ?>});
   <?php endif; ?>
   </script>
+  <?php endif; ?>
+  <?php if ($ga !== '' && $trackEventId !== ''): ?>
+  <script>gtag('event', 'sign_up', {method: 'webinar_1_december_2026'});</script>
   <?php endif; ?>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -436,13 +456,13 @@ $eventLd = [
         <li><span class="vink" aria-hidden="true">✓</span><span>Waarom het uur voor jezelf zo makkelijk doorschuift</span></li>
         <li><span class="vink" aria-hidden="true">✓</span><span>Hoe je diezelfde kracht gebruikt voor iets wat jij belangrijk vindt</span></li>
       </ul>
-      <p class="bonus"><span>Gratis bonus voor aanwezigen</span>De handleiding jaarreview.</p>
+      <p class="bonus"><span>Bonus voor wie live aanwezig is</span>De handleiding voor een eigen jaarreview.</p>
     </section>
 
     <section class="kaart" id="inschrijven">
       <?php if ($isThanks && $thanks !== null): ?>
         <h2>Je bent ingeschreven, <?= e((string) $thanks['first_name']) ?>.</h2>
-        <p class="waarom"><?= e(WebinarService::when()) ?>. Online, 30 minuten. Ben je erbij, dan krijg je de handleiding jaarreview, gratis.</p>
+        <p class="waarom"><?= e(WebinarService::when()) ?>. Online, 30 minuten. Wie live aanwezig is, krijgt als bonus de handleiding voor een eigen jaarreview.</p>
         <?php if ((int) $thanks['mail_ok'] === 1): ?>
           <p class="sub">De bevestiging staat in je mail op <?= e((string) $thanks['email']) ?>.</p>
         <?php else: ?>
@@ -486,6 +506,9 @@ $eventLd = [
             <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
           </p>
           <?= Security::csrfField() ?>
+          <?php foreach (['fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as $trackKey): ?>
+          <input type="hidden" name="<?= e($trackKey) ?>" value="<?= e($attribution[$trackKey] ?? '') ?>">
+          <?php endforeach; ?>
           <p class="veld">
             <label for="voornaam">Voornaam</label>
             <input id="voornaam" name="voornaam" type="text" required maxlength="60" autocomplete="given-name" value="<?= e($voornaam) ?>">

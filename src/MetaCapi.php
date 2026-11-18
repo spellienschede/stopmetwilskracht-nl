@@ -49,6 +49,7 @@ final class MetaCapi
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 2,
             CURLOPT_TIMEOUT => 12,
         ]);
         $raw = curl_exec($ch);
@@ -67,6 +68,90 @@ final class MetaCapi
             return false;
         }
         return true;
+    }
+
+    /**
+     * Webinar-aanmelding. Faalt stil: een trage of lege Meta-call mag de inschrijving niet raken.
+     *
+     * @param array<string,string> $userData
+     */
+    public static function sendWebinarRegistration(string $eventId, array $userData, string $eventSourceUrl): bool
+    {
+        if ($eventId === '') {
+            return false;
+        }
+        try {
+            $token = Config::string('META_CAPI_TOKEN');
+            if ($token === '') {
+                $token = Config::string('META_CAPI_ACCESS_TOKEN');
+            }
+            $pixelId = WebinarService::PIXEL_ID;
+            if ($token === '' || $pixelId === '') {
+                return false;
+            }
+
+            $event = [
+                'event_name' => 'CompleteRegistration',
+                'event_time' => time(),
+                'event_id' => $eventId,
+                'action_source' => 'website',
+                'event_source_url' => $eventSourceUrl,
+                'user_data' => self::normalizeUserData($userData),
+                'custom_data' => [
+                    'content_name' => 'Webinar 1 december 2026',
+                    'currency' => 'EUR',
+                    'value' => 0,
+                ],
+            ];
+            $payload = ['data' => [$event]];
+            $testCode = Config::string('META_TEST_EVENT_CODE');
+            if ($testCode === '') {
+                $testCode = Config::string('META_CAPI_TEST_EVENT_CODE');
+            }
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $localHost = is_string($host) && (
+                $host === 'localhost'
+                || str_starts_with($host, '127.0.0.1')
+                || str_ends_with($host, '.test')
+            );
+            if ($localHost && $testCode === '') {
+                return false;
+            }
+            if ($testCode !== '') {
+                $payload['test_event_code'] = $testCode;
+            }
+
+            $url = 'https://graph.facebook.com/v21.0/' . rawurlencode($pixelId) . '/events?access_token=' . rawurlencode($token);
+            $ch = curl_init($url);
+            if ($ch === false) {
+                return false;
+            }
+            curl_setopt_array($ch, [
+                CURLOPT_POST => true,
+                CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+                CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => 2,
+                CURLOPT_TIMEOUT => 3,
+            ]);
+            $raw = curl_exec($ch);
+            $errno = curl_errno($ch);
+            $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($errno !== 0 || $status >= 400) {
+                Logger::error('Meta CAPI webinar mislukt', [
+                    'status' => $status,
+                    'errno' => $errno,
+                    'body' => is_string($raw) ? substr($raw, 0, 300) : null,
+                ]);
+                return false;
+            }
+            return true;
+        } catch (\Throwable $e) {
+            Logger::error('Meta CAPI webinar exception', ['error' => $e->getMessage()]);
+            return false;
+        }
     }
 
     /** @param array<string,mixed> $order */

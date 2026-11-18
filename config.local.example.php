@@ -45,4 +45,8 @@ return [
 
     // Optioneel: Zoom- of Meet-link in de bevestigingsmail. Leeg = de link volgt later.
     'WEBINAR_JOIN_URL' => '',
+
+    // Webinar Conversions API. Leeg laten als het token in .env staat.
+    'META_CAPI_TOKEN' => '',
+    'META_TEST_EVENT_CODE' => '',
 ];

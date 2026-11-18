@@ -15,12 +15,14 @@ DirectoryIndex index.php index.html
   RewriteRule ^media/?$ /media.php [L]
   RewriteRule ^webinar/(bedankt|agenda)/?$ /webinar.php [L,QSA]
   RewriteRule ^webinar/?$ /webinar.php [L,QSA]
+  RewriteRule ^ads-webinar/ - [E=ads_webinar:1]
   RewriteRule ^sessie/([a-z0-9\-]+)/?$ /sessie.php?slug=$1 [L,QSA]
 </IfModule>
 
 <IfModule mod_headers.c>
   Header set X-Content-Type-Options "nosniff"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set X-Robots-Tag "noindex, nofollow" env=ads_webinar
 </IfModule>
 
 ErrorDocument 404 /404.php

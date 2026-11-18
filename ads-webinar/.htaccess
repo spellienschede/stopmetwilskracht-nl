@@ -1,0 +1,8 @@
+Options -Indexes
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.png$">
+    Header always set X-Robots-Tag "noindex, nofollow"
+    Header set Content-Type "image/png"
+  </FilesMatch>
+</IfModule>
