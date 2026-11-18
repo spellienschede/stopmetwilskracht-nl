@@ -254,7 +254,8 @@ final class WebinarService
         $text = "Hoi {$first},\r\n\r\n"
             . "Je bent ingeschreven voor het webinar.\r\n\r\n"
             . self::TITLE . "\r\n"
-            . self::when() . ". Online, 30 minuten.\r\n\r\n";
+            . self::when() . ". Online, 30 minuten.\r\n\r\n"
+            . "Ben je erbij, dan krijg je een gratis bonus: de handleiding jaarreview.\r\n\r\n";
         if ($join !== '') {
             $text .= "Dit is jouw link. Daarmee kom je binnen. Deel hem niet.\r\n\r\n{$join}\r\n\r\n";
         } else {
@@ -266,7 +267,8 @@ final class WebinarService
 
         $html = '<p>Hoi ' . e($first) . ',</p>'
             . '<p>Je bent ingeschreven voor het webinar.</p>'
-            . '<p><strong>' . e(self::TITLE) . '</strong><br>' . e(self::when()) . '. Online, 30 minuten.</p>';
+            . '<p><strong>' . e(self::TITLE) . '</strong><br>' . e(self::when()) . '. Online, 30 minuten.</p>'
+            . '<p>Ben je erbij, dan krijg je een gratis bonus: de handleiding jaarreview.</p>';
         if ($join !== '') {
             $html .= '<p>Dit is jouw link. Daarmee kom je binnen. Deel hem niet.</p>'
                 . '<p><a href="' . e($join) . '">' . e($join) . '</a></p>';

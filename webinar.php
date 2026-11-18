@@ -269,6 +269,24 @@ $eventLd = [
       color: var(--nacht);
       font-weight: 700;
     }
+    .bonus {
+      margin: 1.25rem 0 0;
+      max-width: 40rem;
+      padding: .9rem 1rem;
+      border-radius: 16px;
+      background: #fff;
+      color: var(--nacht);
+      font-weight: 700;
+      box-shadow: inset 0 0 0 1.5px var(--lijn);
+    }
+    .bonus span {
+      display: block;
+      margin-bottom: .15rem;
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
     .vink {
       flex: 0 0 auto;
       width: 1.35rem;
@@ -380,12 +398,13 @@ $eventLd = [
         <li><span class="vink" aria-hidden="true">✓</span><span>Waarom het uur voor jezelf zo makkelijk doorschuift</span></li>
         <li><span class="vink" aria-hidden="true">✓</span><span>Hoe je diezelfde kracht gebruikt voor iets wat jij belangrijk vindt</span></li>
       </ul>
+      <p class="bonus"><span>Gratis bonus voor aanwezigen</span>De handleiding jaarreview.</p>
     </section>
 
     <section class="kaart" id="inschrijven">
       <?php if ($isThanks && $thanks !== null): ?>
         <h2>Je bent ingeschreven, <?= e((string) $thanks['first_name']) ?>.</h2>
-        <p class="waarom"><?= e(WebinarService::when()) ?>. Online, 30 minuten. Je ziet waarom een afspraak met een ander wel blijft staan, en hoe je diezelfde kracht gebruikt voor iets wat jij belangrijk vindt.</p>
+        <p class="waarom"><?= e(WebinarService::when()) ?>. Online, 30 minuten. Ben je erbij, dan krijg je de handleiding jaarreview, gratis.</p>
         <?php if ((int) $thanks['mail_ok'] === 1): ?>
           <p class="sub">De bevestiging staat in je mail op <?= e((string) $thanks['email']) ?>.</p>
         <?php else: ?>
@@ -419,7 +438,7 @@ $eventLd = [
         <p class="sub">Geen mail ontvangen? <a href="/webinar">Meld je opnieuw aan</a> met hetzelfde adres, dan sturen we de bevestiging nog een keer.</p>
       <?php else: ?>
         <h2>Meld je gratis aan</h2>
-        <p class="sub"><?= e(WebinarService::when()) ?>. Je krijgt meteen een bevestiging.</p>
+        <p class="sub"><?= e(WebinarService::when()) ?>. Je krijgt meteen een bevestiging. Ben je erbij, dan krijg je de handleiding jaarreview, gratis.</p>
         <?php if ($error !== ''): ?>
           <p class="fout" role="alert"><?= e($error) ?></p>
         <?php endif; ?>
