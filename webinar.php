@@ -300,6 +300,7 @@ $eventLd = [
       font-size: .8rem;
     }
     .kaart {
+      position: relative;
       background: var(--papier);
       border-radius: 28px;
       padding: 1.35rem 1.25rem 1.2rem;
@@ -326,20 +327,42 @@ $eventLd = [
       border-radius: 3px;
     }
     .sticker {
+      position: absolute;
+      z-index: 2;
+      top: -34px;
+      right: -14px;
+      width: 116px;
+      height: 116px;
       margin: 0;
-      max-width: 9.4rem;
-      transform: rotate(-8deg);
-      background: var(--geel);
-      color: var(--nacht);
+      padding: .7rem;
+      border-radius: 50%;
+      background: #f07816;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      text-align: center;
       font-weight: 800;
-      font-size: .92rem;
-      line-height: 1.15;
-      letter-spacing: -.02em;
-      padding: .55rem .7rem;
-      border: 2.5px solid var(--nacht);
-      border-radius: 3px;
-      box-shadow: 4px 4px 0 var(--nacht);
+      line-height: 1.05;
+      box-shadow: 0 10px 18px -8px rgba(176, 62, 0, .6);
+      transform: rotate(-16deg);
     }
+    .sticker span {
+      display: block;
+      font-size: 1.2rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .sticker small {
+      display: block;
+      max-width: 6.6rem;
+      margin-top: .2rem;
+      font-size: .62rem;
+      font-weight: 800;
+      letter-spacing: 0;
+      line-height: 1.15;
+    }
+    .kaart:has(.sticker) .sub { padding-right: 4.2rem; }
     label { display: block; font-size: .82rem; font-weight: 800; color: var(--nacht); margin-bottom: .3rem; }
     .veld { margin: 0 0 .75rem; }
     input[type="text"], input[type="email"] {
@@ -466,11 +489,11 @@ $eventLd = [
         <p class="waarom">Zet het webinar in je agenda. Dinsdag 1 december, 19:30, 30 minuten.</p>
         <p class="sub">Geen mail ontvangen? <a href="/webinar">Meld je opnieuw aan</a> met hetzelfde adres, dan sturen we de bevestiging nog een keer.</p>
       <?php else: ?>
+        <p class="sticker"><span>Bonus</span><small>Handleiding jaarreview</small></p>
         <h2>Meld je gratis aan</h2>
         <p class="sub"><?= e(WebinarService::when()) ?>. Je krijgt meteen een bevestiging.</p>
         <div class="boekje">
           <img src="/assets/img/jaarreview-boekje.jpg" width="681" height="1081" alt="Boekje Jaarreview">
-          <p class="sticker">Bonus: Handleiding jaarreview</p>
         </div>
         <?php if ($error !== ''): ?>
           <p class="fout" role="alert"><?= e($error) ?></p>
