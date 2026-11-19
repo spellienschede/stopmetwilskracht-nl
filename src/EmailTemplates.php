@@ -15,14 +15,17 @@ final class EmailTemplates
         $addr = nl2br(e(OrderService::formatAddress($o)));
         $bonusHtml = '';
         $bonusText = '';
-        if (Config::isPresaleActive()) {
+        if (Config::isPresaleActive() && !OrderService::isBlackFridayOrder($o)) {
             $bonus = e(Config::presaleBonusText());
             $bonusHtml = '<p>' . $bonus . '</p>';
             $bonusText = "\n" . Config::presaleBonusText() . "\n";
         }
         $book = e(Config::string('BOOK_TITLE'));
+        $bfHtml = self::blackFridayNoteHtml($o);
+        $bfText = self::blackFridayNoteText($o);
         $htmlBody = "<p>Hallo {$name},</p>"
             . "<p>Bedankt voor je bestelling van <strong>{$book}</strong>. Je betaling is ontvangen.</p>"
+            . $bfHtml
             . "<p><strong>Bestelnummer:</strong> {$nr}<br>"
             . "<strong>Aantal:</strong> {$qty}<br>"
             . "<strong>Betaald:</strong> {$total}<br>"
@@ -33,6 +36,7 @@ final class EmailTemplates
             . '<p>Vragen? Mail naar <a href="mailto:info@kornepot.nl">info@kornepot.nl</a>.</p>'
             . '<p>Groet,<br>Korne Pot</p>';
         $text = "Hallo {$o['first_name']},\n\nBedankt voor je bestelling van " . Config::string('BOOK_TITLE') . ". Je betaling is ontvangen.\n\n"
+            . $bfText
             . "Bestelnummer: {$o['public_order_number']}\nAantal: {$qty}\nBetaald: {$total}\n"
             . "Afleveradres:\n" . OrderService::formatAddress($o) . "\n\n"
             . "Zodra het boek onderweg is, krijg je bericht.\n"
@@ -52,11 +56,13 @@ final class EmailTemplates
             . 'Aantal: ' . (int) $o['quantity'] . '<br>'
             . 'Totaal: ' . money_cents((int) $o['total_cents']) . '<br>'
             . 'Status: betaald</p>'
+            . self::blackFridayNoteHtml($o)
             . '<p>' . nl2br(e(OrderService::formatAddress($o))) . '</p>'
             . '<p><a href="' . e($link) . '">Open in beheer</a></p>';
         $text = "Nieuwe betaalde bestelling {$o['public_order_number']}\n"
             . "{$o['first_name']} {$o['last_name']} <{$o['email']}>\n"
             . 'Aantal: ' . $o['quantity'] . ' / ' . money_cents((int) $o['total_cents']) . "\n"
+            . self::blackFridayNoteText($o)
             . OrderService::formatAddress($o) . "\n\n{$link}\n";
         return [Mailer::wrapHtml('Nieuwe bestelling', $htmlBody), $text];
     }
@@ -72,11 +78,13 @@ final class EmailTemplates
             . 'Aantal: ' . (int) $o['quantity'] . '<br>'
             . 'Totaal: ' . money_cents((int) $o['total_cents']) . '<br>'
             . 'Status: wacht op betaling</p>'
+            . self::blackFridayNoteHtml($o)
             . '<p>' . nl2br(e(OrderService::formatAddress($o))) . '</p>'
             . '<p><a href="' . e($link) . '">Open in beheer</a></p>';
         $text = "Bestelling wacht op betaling {$o['public_order_number']}\n"
             . "{$o['first_name']} {$o['last_name']} <{$o['email']}>\n"
             . 'Aantal: ' . $o['quantity'] . ' / ' . money_cents((int) $o['total_cents']) . "\n"
+            . self::blackFridayNoteText($o)
             . OrderService::formatAddress($o) . "\n\n{$link}\n";
         return [Mailer::wrapHtml('Bestelling wacht op betaling', $htmlBody), $text];
     }
@@ -104,11 +112,20 @@ final class EmailTemplates
     public static function orderShipped(array $o): array
     {
         $book = e(Config::string('BOOK_TITLE'));
+        $shippedLine = OrderService::isBlackFridayOrder($o)
+            ? "Je 2 exemplaren van <strong>{$book}</strong> zijn verzonden."
+            : "Je exemplaar van <strong>{$book}</strong> is verzonden.";
+        $shippedText = OrderService::isBlackFridayOrder($o)
+            ? 'Je 2 exemplaren van ' . Config::string('BOOK_TITLE') . " zijn verzonden.\n"
+            : 'Je exemplaar van ' . Config::string('BOOK_TITLE') . " is verzonden.\n";
         $htmlBody = '<p>Hallo ' . e((string) $o['first_name']) . ',</p>'
-            . "<p>Je exemplaar van <strong>{$book}</strong> is verzonden.</p>"
+            . '<p>' . $shippedLine . '</p>'
+            . self::blackFridayNoteHtml($o)
             . '<p>Bestelnummer: ' . e((string) $o['public_order_number']) . '</p>'
             . '<p>Groet,<br>Korne Pot</p>';
-        $text = "Hallo {$o['first_name']},\n\nJe exemplaar van " . Config::string('BOOK_TITLE') . " is verzonden.\nBestelnummer: {$o['public_order_number']}\n\nGroet,\nKorne Pot\n";
+        $text = "Hallo {$o['first_name']},\n\n" . $shippedText
+            . self::blackFridayNoteText($o)
+            . "Bestelnummer: {$o['public_order_number']}\n\nGroet,\nKorne Pot\n";
         return [Mailer::wrapHtml('Verzonden', $htmlBody), $text];
     }
 
@@ -436,5 +453,23 @@ final class EmailTemplates
             . '<p>Groet,<br>Korne</p>';
         $text = "Hallo {$name},\n\n{$body}\n\nGroet,\nKorne\n";
         return [Mailer::wrapHtml($subject, $htmlBody), $text];
+    }
+
+    /** @param array<string,mixed> $o */
+    private static function blackFridayNoteHtml(array $o): string
+    {
+        if (!OrderService::isBlackFridayOrder($o)) {
+            return '';
+        }
+        return '<p><strong>Black Friday-actie: 2 boeken voor de prijs van 1</strong>. In deze zending gaan 2 exemplaren: één voor jou, één voor je grippartner.</p>';
+    }
+
+    /** @param array<string,mixed> $o */
+    private static function blackFridayNoteText(array $o): string
+    {
+        if (!OrderService::isBlackFridayOrder($o)) {
+            return '';
+        }
+        return "Black Friday-actie: 2 boeken voor de prijs van 1\nIn deze zending gaan 2 exemplaren: één voor jou, één voor je grippartner.\n";
     }
 }

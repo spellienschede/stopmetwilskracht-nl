@@ -5,8 +5,10 @@ require dirname(__DIR__, 2) . '/src/bootstrap.php';
 
 use Grippartner\Auth;
 use Grippartner\Database;
+use Grippartner\OrderService;
 
 Auth::requireLogin();
+OrderService::ensureBlackFridayColumns();
 
 $filter = (string) ($_GET['filter'] ?? 'ready');
 if (!in_array($filter, ['ready', 'all'], true)) {
@@ -69,6 +71,7 @@ if ($download) {
         'Plaats',
         'Land',
         'Aantal',
+        'Actie',
         'Bron',
         'Betaalstatus',
         'Verzendstatus',
@@ -87,6 +90,7 @@ if ($download) {
             $csvCell((string) $r['city']),
             $csvCell((string) $r['country']),
             (string) (int) $r['quantity'],
+            $csvCell(OrderService::isBlackFridayOrder($r) ? 'blackfriday_1plus1: 2 boeken' : (string) ($r['promo'] ?? '')),
             $csvCell((string) $r['source']),
             $csvCell((string) $r['payment_status']),
             $csvCell((string) $r['fulfilment_status']),
@@ -124,13 +128,14 @@ require __DIR__ . '/_layout_start.php';
       <th>Naam</th>
       <th>Plaats</th>
       <th>Aantal</th>
+      <th>Actie</th>
       <th>Bron</th>
       <th>Status</th>
     </tr>
   </thead>
   <tbody>
   <?php if ($rows === []): ?>
-    <tr><td colspan="6">Geen rijen voor deze filter.</td></tr>
+    <tr><td colspan="7">Geen rijen voor deze filter.</td></tr>
   <?php else: ?>
     <?php foreach (array_slice($rows, 0, 50) as $r): ?>
       <tr>
@@ -138,6 +143,7 @@ require __DIR__ . '/_layout_start.php';
         <td><?= e(trim($r['first_name'] . ' ' . $r['last_name'])) ?></td>
         <td><?= e((string) $r['postal_code'] . ' ' . $r['city']) ?></td>
         <td><?= (int) $r['quantity'] ?></td>
+        <td><?= OrderService::isBlackFridayOrder($r) ? '<span class="badge">Black Friday · 2 boeken</span>' : e((string) ($r['promo'] ?? '')) ?></td>
         <td><?= $r['source'] === 'approved_promo' ? '<span class="badge">Promo</span>' : 'Mollie' ?></td>
         <td><?= e((string) $r['fulfilment_status']) ?></td>
       </tr>

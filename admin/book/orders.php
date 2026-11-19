@@ -8,6 +8,7 @@ use Grippartner\Database;
 use Grippartner\OrderService;
 
 Auth::requireLogin();
+OrderService::ensureBlackFridayColumns();
 
 $q = trim((string) ($_GET['q'] ?? ''));
 $status = trim((string) ($_GET['status'] ?? ''));
@@ -92,6 +93,7 @@ require __DIR__ . '/_layout_start.php';
       <th>Naam</th>
       <th>E-mail</th>
       <th>Bron</th>
+      <th>Aantal</th>
       <th>Betaling</th>
       <th>Verzending</th>
       <th>Totaal</th>
@@ -100,7 +102,7 @@ require __DIR__ . '/_layout_start.php';
   </thead>
   <tbody>
   <?php if ($orders === []): ?>
-    <tr><td colspan="8">Geen bestellingen gevonden.</td></tr>
+    <tr><td colspan="9">Geen bestellingen gevonden.</td></tr>
   <?php else: ?>
     <?php foreach ($orders as $o): ?>
       <tr>
@@ -113,7 +115,11 @@ require __DIR__ . '/_layout_start.php';
           <?php else: ?>
             Mollie
           <?php endif; ?>
+          <?php if (OrderService::isBlackFridayOrder($o)): ?>
+            <br><span class="badge">Black Friday · 2 boeken</span>
+          <?php endif; ?>
         </td>
+        <td><?= (int) $o['quantity'] ?></td>
         <td><?= e($paymentLabels[$o['payment_status']] ?? (string) $o['payment_status']) ?></td>
         <td><?= e((string) $o['fulfilment_status']) ?></td>
         <td><?= e(money_cents((int) $o['total_cents'], (string) $o['currency'])) ?></td>

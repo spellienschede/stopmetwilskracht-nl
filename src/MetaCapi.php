@@ -239,17 +239,17 @@ final class MetaCapi
         if ($public === '') {
             return false;
         }
-        $eventId = 'purchase:' . $public;
+        $commerce = OrderService::commercePayload($order);
         return self::send(
             'Purchase',
-            $eventId,
+            OrderService::purchaseEventId($order),
             [
-                'currency' => (string) ($order['currency'] ?? 'EUR'),
-                'value' => ((int) ($order['total_cents'] ?? 0)) / 100,
-                'content_ids' => ['stop-met-wilskracht'],
+                'currency' => $commerce['currency'],
+                'value' => $commerce['value'],
+                'content_ids' => $commerce['content_ids'],
                 'content_type' => 'product',
-                'content_name' => Config::string('BOOK_TITLE'),
-                'num_items' => max(1, (int) ($order['quantity'] ?? 1)),
+                'content_name' => $commerce['content_name'],
+                'num_items' => $commerce['num_items'],
                 'order_id' => $public,
             ],
             self::userDataFromOrder($order),
@@ -347,16 +347,17 @@ final class MetaCapi
         if ($public === '') {
             return false;
         }
+        $commerce = OrderService::commercePayload($order);
         return self::send(
             'InitiateCheckout',
             'ic:' . $public,
             [
-                'currency' => (string) ($order['currency'] ?? 'EUR'),
-                'value' => ((int) ($order['total_cents'] ?? 0)) / 100,
-                'content_ids' => ['stop-met-wilskracht'],
+                'currency' => $commerce['currency'],
+                'value' => $commerce['value'],
+                'content_ids' => $commerce['content_ids'],
                 'content_type' => 'product',
-                'content_name' => Config::string('BOOK_TITLE'),
-                'num_items' => max(1, (int) ($order['quantity'] ?? 1)),
+                'content_name' => $commerce['content_name'],
+                'num_items' => $commerce['num_items'],
             ],
             self::userDataFromOrder($order),
             Config::baseUrl() . '/bestelling-bevestigen.php'

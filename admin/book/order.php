@@ -9,6 +9,7 @@ use Grippartner\OrderService;
 use Grippartner\Security;
 
 Auth::requireLogin();
+OrderService::ensureBlackFridayColumns();
 
 $id = (int) ($_GET['id'] ?? 0);
 $order = OrderService::findById($id);
@@ -67,6 +68,12 @@ require __DIR__ . '/_layout_start.php';
 <p><a href="/admin/book/orders.php">← Bestellingen</a></p>
 <h1><?= e((string) $order['public_order_number']) ?></h1>
 
+<?php if (OrderService::isBlackFridayOrder($order)): ?>
+  <div class="status-box status-ok">
+    <p><strong>Black Friday-actie: 2 boeken voor de prijs van 1.</strong> In deze zending gaan 2 exemplaren. Betaald is de prijs van 1 boek.</p>
+  </div>
+<?php endif; ?>
+
 <?php if ($order['source'] === 'approved_promo'): ?>
   <p><span class="badge">Promo / gratis exemplaar</span>
   <?php if (!empty($order['promo_application_id'])): ?>
@@ -80,7 +87,12 @@ require __DIR__ . '/_layout_start.php';
     <tr><th>Naam</th><td><?= e(trim($order['first_name'] . ' ' . $order['last_name'])) ?></td></tr>
     <tr><th>E-mail</th><td><a href="mailto:<?= e((string) $order['email']) ?>"><?= e((string) $order['email']) ?></a></td></tr>
     <tr><th>Adres</th><td><pre style="margin:0;font:inherit;white-space:pre-wrap"><?= e(OrderService::formatAddress($order)) ?></pre></td></tr>
-    <tr><th>Aantal</th><td><?= (int) $order['quantity'] ?></td></tr>
+    <tr><th>Aantal</th><td><?= (int) $order['quantity'] ?><?= OrderService::isBlackFridayOrder($order) ? ' (2 boeken inpakken)' : '' ?></td></tr>
+    <tr><th>Actie</th><td><?= e((string) ($order['promo'] ?? '—')) ?></td></tr>
+    <tr><th>utm_source</th><td><?= e((string) ($order['utm_source'] ?? '—')) ?></td></tr>
+    <tr><th>utm_medium</th><td><?= e((string) ($order['utm_medium'] ?? '—')) ?></td></tr>
+    <tr><th>utm_campaign</th><td><?= e((string) ($order['utm_campaign'] ?? '—')) ?></td></tr>
+    <tr><th>utm_content</th><td><?= e((string) ($order['utm_content'] ?? '—')) ?></td></tr>
     <tr><th>Prijs / stuk</th><td><?= e(money_cents((int) $order['unit_price_cents'], (string) $order['currency'])) ?></td></tr>
     <tr><th>Totaal</th><td><?= e(money_cents((int) $order['total_cents'], (string) $order['currency'])) ?></td></tr>
     <tr><th>Bron</th><td><?= e((string) $order['source']) ?></td></tr>

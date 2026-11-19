@@ -11,9 +11,10 @@ use Grippartner\SessionService;
 
 $pageTitle = $title ?? (Config::string('BOOK_TITLE') . ' – boek van ' . Config::string('BOOK_AUTHOR'));
 $pageDesc = $description ?? (Config::string('BOOK_HOOK') . ' ' . Config::priceFormatted() . ' inclusief btw en verzending.');
-$orderUrl = Config::orderUrl();
+$orderUrl = !empty($orderUrlOverride) ? (string) $orderUrlOverride : Config::orderUrl();
+$navCtaLabel = isset($navCtaLabel) ? (string) $navCtaLabel : '';
 $canon = $canonical ?? Config::canonicalForPath('/');
-if (Config::isActionSite()) {
+if (Config::isActionSite() && empty($canonicalSelf)) {
     // Always map to Grip; ignore self-canonical from page scripts
     $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH) ?: '/';
     $canon = Config::canonicalForPath(is_string($path) ? $path : '/');
@@ -23,6 +24,8 @@ $ga = Config::string('GA_MEASUREMENT_ID');
 $metaPixelId = Config::string('META_PIXEL_ID');
 /** @var list<array{0: string, 1?: array<string, mixed>}> $metaPixelEvents */
 $metaPixelEvents = $metaPixelEvents ?? [];
+/** @var list<array{0: string, 1?: array<string, mixed>}> $gaEvents */
+$gaEvents = $gaEvents ?? [];
 $presaleActive = Config::isPresaleActive();
 $released = Config::isReleased();
 $presaleEndIso = Config::string('BOOK_PRESALE_END_DATE', '2026-10-19');
@@ -41,7 +44,17 @@ try {
 <head>
   <?php if ($ga !== ''): ?>
   <script async src="https://www.googletagmanager.com/gtag/js?id=<?= e($ga) ?>"></script>
-  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','<?= e($ga) ?>');</script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','<?= e($ga) ?>');
+  <?php foreach ($gaEvents as $gaEvent):
+      $gaName = (string) ($gaEvent[0] ?? '');
+      $gaParams = $gaEvent[1] ?? [];
+      if ($gaName === '') {
+          continue;
+      }
+      ?>
+  gtag('event', <?= json_encode($gaName, JSON_UNESCAPED_UNICODE) ?>, <?= json_encode(is_array($gaParams) ? $gaParams : [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>);
+  <?php endforeach; ?>
+  </script>
   <?php endif; ?>
   <?php if ($metaPixelId !== ''): ?>
   <!-- Meta Pixel Code -->
@@ -103,7 +116,7 @@ try {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Overpass:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/site.css?v=20260906b">
+  <link rel="stylesheet" href="/assets/css/site.css?v=20261119bf">
   <?php if (!empty($extraHead)): ?><?= $extraHead ?><?php endif; ?>
   <script type="application/ld+json">
   <?php
@@ -123,7 +136,7 @@ try {
           'priceCurrency' => Config::string('BOOK_CURRENCY'),
           'price' => number_format(Config::currentPriceCents() / 100, 2, '.', ''),
           'availability' => $released ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder',
-          'url' => $orderUrl,
+          'url' => str_starts_with($orderUrl, 'http') ? $orderUrl : rtrim(Config::baseUrl(), '/') . $orderUrl,
       ],
   ];
   $coverPath = Config::string('BOOK_COVER_PATH');
@@ -157,7 +170,7 @@ try {
       <?php endif; ?>
       <a class="nav-link-desk" href="/boekpresentatie.php">Boekpresentatie</a>
       <a class="nav-promo" href="/#promo">Gratis via promo</a>
-      <a class="btn btn-primary btn-nav-order" href="<?= e($orderUrl) ?>"><?= $presaleActive ? '€ 10 korting' : e(Config::orderCta()) ?></a>
+      <a class="btn btn-primary btn-nav-order" href="<?= e($orderUrl) ?>"><?= $navCtaLabel !== '' ? e($navCtaLabel) : ($presaleActive ? '€ 10 korting' : e(Config::orderCta())) ?></a>
     </nav>
   </div>
 </header>
@@ -186,8 +199,13 @@ try {
 <?php if (empty($hideMobileCta)): ?>
 <div class="mobile-cta-bar" aria-label="Snelle acties">
   <a class="btn btn-primary" href="<?= e($orderUrl) ?>">
+    <?php if ($navCtaLabel !== ''): ?>
+    <span class="cta-full"><?= e($navCtaLabel) ?></span>
+    <span class="cta-short"><?= e($navCtaLabel) ?></span>
+    <?php else: ?>
     <span class="cta-full"><?= $presaleActive ? 'Pre-order € 10 korting' : e(Config::orderCta()) ?></span>
     <span class="cta-short"><?= $presaleActive ? '€ 10 korting' : e(Config::orderVerb()) ?></span>
+    <?php endif; ?>
   </a>
   <a class="btn btn-promo" href="/#promo">
     <span class="cta-full">Gratis boek via promo</span>

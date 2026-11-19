@@ -26,6 +26,7 @@ $showNav = $showNav ?? Auth::check();
   <strong style="margin-right:0.5rem">Grippartner</strong>
   <a href="/admin/book/">Dashboard</a>
   <a href="/admin/book/orders.php">Bestellingen</a>
+  <a href="/admin/book/blackfriday.php">Black Friday</a>
   <a href="/admin/book/promos.php">Promo</a>
   <a href="/admin/book/sessions.php">Sessies</a>
   <a href="/admin/book/presentation-signups.php">Boekpresentatie</a>

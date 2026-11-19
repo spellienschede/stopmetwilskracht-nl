@@ -17,28 +17,136 @@ final class OrderService
     public const FULFILMENT_READY = 'ready_to_ship';
     public const FULFILMENT_SHIPPED = 'shipped';
 
+    public static function isBlackFridayOrder(array $order): bool
+    {
+        return (string) ($order['promo'] ?? '') === Config::blackFridayPromoCode();
+    }
+
+    public static function purchaseEventId(array $order): string
+    {
+        $public = (string) ($order['public_order_number'] ?? '');
+        if (self::isBlackFridayOrder($order)) {
+            return 'purchase_' . $public;
+        }
+        return 'purchase:' . $public;
+    }
+
+    /**
+     * @param array<string,mixed> $order
+     * @return array{content_name:string,num_items:int,value:float,currency:string,content_ids:list<string>,item_price:float}
+     */
+    public static function commercePayload(array $order): array
+    {
+        $bf = self::isBlackFridayOrder($order);
+        $qty = $bf ? 2 : max(1, (int) ($order['quantity'] ?? 1));
+        $valueCents = (int) ($order['total_cents'] ?? 0);
+        return [
+            'content_name' => $bf ? 'Black Friday 1+1' : Config::string('BOOK_TITLE'),
+            'num_items' => $qty,
+            'value' => $valueCents / 100,
+            'currency' => (string) ($order['currency'] ?? Config::string('BOOK_CURRENCY', 'EUR')),
+            'content_ids' => ['stop-met-wilskracht'],
+            'item_price' => ($valueCents / $qty) / 100,
+        ];
+    }
+
+    /**
+     * Black Friday: 2 boeken, te betalen is de gewone prijs van 1 boek.
+     * De boekprijs is inclusief één zending; er is geen aparte verzendklasse.
+     *
+     * @param array<string,mixed> $data
+     * @return array{quantity:int,unit_price_cents:int,total_cents:int,promo:?string}
+     */
+    public static function resolveCheckout(array $data, ?\DateTimeImmutable $now = null): array
+    {
+        if (($data['actie'] ?? '') === 'blackfriday') {
+            if (Config::isBlackFridayActive($now)) {
+                $unit = Config::regularPriceCents();
+                return [
+                    'quantity' => 2,
+                    'unit_price_cents' => $unit,
+                    'total_cents' => $unit,
+                    'promo' => Config::blackFridayPromoCode(),
+                ];
+            }
+            $unit = Config::currentPriceCents();
+            return [
+                'quantity' => 1,
+                'unit_price_cents' => $unit,
+                'total_cents' => $unit,
+                'promo' => null,
+            ];
+        }
+        $qty = max(1, min(50, (int) ($data['quantity'] ?? 1)));
+        $unit = Config::currentPriceCents();
+        return [
+            'quantity' => $qty,
+            'unit_price_cents' => $unit,
+            'total_cents' => $unit * $qty,
+            'promo' => null,
+        ];
+    }
+
+    public static function ensureBlackFridayColumns(): void
+    {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
+        $pdo = Database::pdo();
+        $existing = [];
+        $cols = $pdo->query(
+            "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'book_orders'"
+        );
+        foreach ($cols->fetchAll() as $row) {
+            $existing[(string) $row['COLUMN_NAME']] = true;
+        }
+        $add = [
+            'promo' => 'ALTER TABLE book_orders ADD COLUMN promo VARCHAR(64) NULL',
+            'utm_source' => 'ALTER TABLE book_orders ADD COLUMN utm_source VARCHAR(120) NULL',
+            'utm_medium' => 'ALTER TABLE book_orders ADD COLUMN utm_medium VARCHAR(120) NULL',
+            'utm_campaign' => 'ALTER TABLE book_orders ADD COLUMN utm_campaign VARCHAR(120) NULL',
+            'utm_content' => 'ALTER TABLE book_orders ADD COLUMN utm_content VARCHAR(120) NULL',
+        ];
+        foreach ($add as $column => $sql) {
+            if (!isset($existing[$column])) {
+                $pdo->exec($sql);
+            }
+        }
+        $index = $pdo->query(
+            "SELECT COUNT(*) FROM information_schema.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'book_orders' AND INDEX_NAME = 'idx_order_promo'"
+        )->fetchColumn();
+        if ((int) $index === 0) {
+            $pdo->exec('ALTER TABLE book_orders ADD INDEX idx_order_promo (promo)');
+        }
+        $ready = true;
+    }
+
     /** @param array<string,mixed> $data */
     public static function createPendingOrder(array $data): array
     {
-        $unit = Config::currentPriceCents();
-        $qty = (int) $data['quantity'];
-        $total = $unit * $qty;
+        self::ensureBlackFridayColumns();
+        $priced = self::resolveCheckout($data);
         $public = PublicId::order();
         $pdo = Database::pdo();
 
         $stmt = $pdo->prepare(
             'INSERT INTO book_orders (
-                public_order_number, source, first_name, last_name, email,
+                public_order_number, source, promo, first_name, last_name, email,
                 street, house_number, house_addition, postal_code, city, country,
                 quantity, unit_price_cents, total_cents, currency,
                 payment_status, fulfilment_status,
-                marketing_consent, marketing_consent_at
+                marketing_consent, marketing_consent_at,
+                utm_source, utm_medium, utm_campaign, utm_content
             ) VALUES (
-                ?, \'mollie\', ?, ?, ?,
+                ?, \'mollie\', ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?,
                 ?, ?,
-                ?, ?
+                ?, ?,
+                ?, ?, ?, ?
             )'
         );
 
@@ -48,6 +156,7 @@ final class OrderService
 
         $stmt->execute([
             $public,
+            $priced['promo'],
             $data['first_name'],
             $data['last_name'],
             $data['email'],
@@ -57,14 +166,18 @@ final class OrderService
             $data['postal_code'],
             $data['city'],
             $data['country'],
-            $qty,
-            $unit,
-            $total,
+            $priced['quantity'],
+            $priced['unit_price_cents'],
+            $priced['total_cents'],
             Config::string('BOOK_CURRENCY', 'EUR'),
             self::PAYMENT_PENDING,
             self::FULFILMENT_AWAITING,
             !empty($data['marketing_consent']) ? 1 : 0,
             $consentAt,
+            $data['utm_source'] ?? null,
+            $data['utm_medium'] ?? null,
+            $data['utm_campaign'] ?? null,
+            $data['utm_content'] ?? null,
         ]);
 
         $id = (int) $pdo->lastInsertId();
@@ -99,7 +212,10 @@ final class OrderService
     {
         $client = new MollieClient();
         $amountValue = number_format(((int) $order['total_cents']) / 100, 2, '.', '');
-        $description = Config::string('BOOK_TITLE') . ' × ' . $order['quantity'] . ' (' . $order['public_order_number'] . ')';
+        $description = self::isBlackFridayOrder($order)
+            ? Config::string('BOOK_TITLE') . ' – 2 voor 1 (' . $order['public_order_number'] . ')'
+            : Config::string('BOOK_TITLE') . ' × ' . $order['quantity'] . ' (' . $order['public_order_number'] . ')';
+        $siteHost = parse_url(Config::baseUrl(), PHP_URL_HOST);
 
         $payload = [
             'amount' => [
@@ -112,7 +228,8 @@ final class OrderService
             'metadata' => [
                 'order_id' => (int) $order['id'],
                 'public_order_number' => $order['public_order_number'],
-                'site' => 'grippartner.nl',
+                'site' => is_string($siteHost) && $siteHost !== '' ? $siteHost : 'stopmetwilskracht.nl',
+                'promo' => (string) ($order['promo'] ?? ''),
             ],
         ];
 
@@ -167,7 +284,12 @@ final class OrderService
             } catch (\PDOException $e) {
                 if ((int) $e->getCode() === 23000 || str_contains($e->getMessage(), 'Duplicate')) {
                     $pdo->commit();
-                    return; // already processed this status event
+                    $existing = self::findByMollieId($paymentId);
+                    if ($existing && $existing['payment_status'] === self::PAYMENT_PAID) {
+                        self::sendPaidEmails($existing);
+                        self::sendMetaPurchaseOnce($existing);
+                    }
+                    return;
                 }
                 throw $e;
             }
@@ -217,15 +339,7 @@ final class OrderService
         $fresh = self::findById((int) ($order['id'] ?? 0));
         if ($fresh && $fresh['payment_status'] === self::PAYMENT_PAID) {
             self::sendPaidEmails($fresh);
-            if (empty($fresh['meta_purchase_sent_at'])) {
-                try {
-                    if (MetaCapi::sendPurchase($fresh)) {
-                        self::markMetaPurchaseSent((int) $fresh['id']);
-                    }
-                } catch (\Throwable $e) {
-                    Logger::error('Meta CAPI purchase failed', ['m' => $e->getMessage()]);
-                }
-            }
+            self::sendMetaPurchaseOnce($fresh);
             try {
                 MailingList::subscribe(
                     (string) $fresh['email'],
@@ -264,10 +378,40 @@ final class OrderService
             ->execute([$orderId]);
     }
 
-    public static function markMetaPurchaseSent(int $orderId): void
+    /** @return bool True als deze aanroep de Purchase als eerste claimt. */
+    public static function markMetaPurchaseSent(int $orderId): bool
     {
-        Database::pdo()->prepare('UPDATE book_orders SET meta_purchase_sent_at = COALESCE(meta_purchase_sent_at, NOW()) WHERE id = ?')
+        $stmt = Database::pdo()->prepare(
+            'UPDATE book_orders SET meta_purchase_sent_at = NOW() WHERE id = ? AND meta_purchase_sent_at IS NULL'
+        );
+        $stmt->execute([$orderId]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public static function releaseMetaPurchaseSend(int $orderId): void
+    {
+        Database::pdo()->prepare('UPDATE book_orders SET meta_purchase_sent_at = NULL WHERE id = ?')
             ->execute([$orderId]);
+    }
+
+    /** Server-Purchase één keer per order. Browser gebruikt hetzelfde event_id. */
+    public static function sendMetaPurchaseOnce(array $order): void
+    {
+        if (($order['payment_status'] ?? '') !== self::PAYMENT_PAID) {
+            return;
+        }
+        $orderId = (int) ($order['id'] ?? 0);
+        if ($orderId === 0 || !self::markMetaPurchaseSent($orderId)) {
+            return;
+        }
+        try {
+            if (!MetaCapi::sendPurchase($order)) {
+                self::releaseMetaPurchaseSend($orderId);
+            }
+        } catch (\Throwable $e) {
+            self::releaseMetaPurchaseSend($orderId);
+            Logger::error('Meta CAPI purchase failed', ['m' => $e->getMessage()]);
+        }
     }
 
     public static function mapMollieStatus(string $status): string

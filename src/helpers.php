@@ -45,3 +45,50 @@ function app_path(string $relative = ''): string
     $base = dirname(__DIR__);
     return $relative === '' ? $base : $base . '/' . ltrim($relative, '/');
 }
+
+function clean_utm(string $value): ?string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return null;
+    }
+    $value = mb_substr($value, 0, 120);
+    if (!preg_match('/^[A-Za-z0-9._:-]+$/', $value)) {
+        return null;
+    }
+    return $value;
+}
+
+function capture_campaign_attribution(): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return;
+    }
+    foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'] as $key) {
+        $raw = $_GET[$key] ?? null;
+        if (!is_string($raw)) {
+            continue;
+        }
+        $clean = clean_utm($raw);
+        if ($clean !== null) {
+            $_SESSION[$key] = $clean;
+        }
+    }
+}
+
+/**
+ * Hidden fields winnen van de sessie, zodat de landingspagina de advertentie vasthoudt.
+ *
+ * @param array<string,mixed> $input
+ * @return array{utm_source:?string,utm_medium:?string,utm_campaign:?string,utm_content:?string}
+ */
+function campaign_attribution_from_request(array $input): array
+{
+    $out = [];
+    foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'] as $key) {
+        $fromInput = isset($input[$key]) && is_string($input[$key]) ? clean_utm($input[$key]) : null;
+        $fromSession = (isset($_SESSION[$key]) && is_string($_SESSION[$key])) ? clean_utm($_SESSION[$key]) : null;
+        $out[$key] = $fromInput ?? $fromSession;
+    }
+    return $out;
+}

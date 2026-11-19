@@ -23,23 +23,38 @@ $description = 'Status van je Grippartner-betaling.';
 $canonical = Config::baseUrl() . '/betaalstatus.php';
 $noindex = true;
 $metaPixelEvents = [];
-$purchaseEventId = null;
+$gaEvents = [];
 if ($order && $order['payment_status'] === OrderService::PAYMENT_PAID) {
-    $purchaseEventId = 'purchase:' . $order['public_order_number'];
+    $purchaseEventId = OrderService::purchaseEventId($order);
+    $commerce = OrderService::commercePayload($order);
     $alreadyTracked = !empty($_SESSION['meta_purchase_tracked'][$order['public_order_number']]);
     if (!$alreadyTracked) {
         $metaPixelEvents = [[
             'Purchase',
             [
-                'content_name' => Config::string('BOOK_TITLE'),
-                'content_ids' => ['stop-met-wilskracht'],
+                'content_name' => $commerce['content_name'],
+                'content_ids' => $commerce['content_ids'],
                 'content_type' => 'product',
-                'value' => ((int) $order['total_cents']) / 100,
-                'currency' => Config::string('BOOK_CURRENCY'),
-                'num_items' => max(1, (int) $order['quantity']),
+                'value' => $commerce['value'],
+                'currency' => $commerce['currency'],
+                'num_items' => $commerce['num_items'],
                 'order_id' => (string) $order['public_order_number'],
             ],
             $purchaseEventId,
+        ]];
+        $gaEvents = [[
+            'purchase',
+            [
+                'transaction_id' => (string) $order['public_order_number'],
+                'value' => $commerce['value'],
+                'currency' => $commerce['currency'],
+                'items' => [[
+                    'item_id' => 'stop-met-wilskracht',
+                    'item_name' => $commerce['content_name'],
+                    'quantity' => $commerce['num_items'],
+                    'price' => $commerce['item_price'],
+                ]],
+            ],
         ]];
         $_SESSION['meta_purchase_tracked'][$order['public_order_number']] = true;
     }
@@ -58,8 +73,11 @@ ob_start();
         <div class="status-box status-ok">
           <h2>Betaling geslaagd</h2>
           <p>Bedankt. Je bestelling <strong><?= e($order['public_order_number']) ?></strong> is bevestigd. Je ontvangt een bevestigingsmail op <?= e($order['email']) ?>.</p>
+          <?php if (OrderService::isBlackFridayOrder($order)): ?>
+            <p><strong>Black Friday-actie: 2 boeken voor de prijs van 1.</strong> Eén voor jou, één voor je grippartner.</p>
+          <?php endif; ?>
           <p>Zodra het boek onderweg is, krijg je bericht.</p>
-          <?php if (Config::isPresaleActive()): ?>
+          <?php if (Config::isPresaleActive() && !OrderService::isBlackFridayOrder($order)): ?>
             <p class="bonus-note"><?= e(Config::presaleBonusText()) ?></p>
           <?php endif; ?>
         </div>
@@ -67,7 +85,7 @@ ob_start();
         <div class="status-box status-bad">
           <h2>Betaling niet voltooid</h2>
           <p>De betaling is mislukt, geannuleerd of verlopen.</p>
-          <p><a class="btn btn-primary" href="/bestellen.php">Opnieuw proberen</a></p>
+          <p><a class="btn btn-primary" href="<?= OrderService::isBlackFridayOrder($order) ? '/bestellen.php?actie=blackfriday' : '/bestellen.php' ?>">Opnieuw proberen</a></p>
         </div>
       <?php else: ?>
         <div class="status-box status-wait">

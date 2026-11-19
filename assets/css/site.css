@@ -1561,3 +1561,33 @@ table.data th { background: var(--yellow); }
     grid-template-columns: 1fr;
   }
 }
+
+.bf-covers {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  justify-content: center;
+}
+.bf-covers img {
+  width: min(42vw, 200px);
+  height: auto;
+  border: var(--border-thick);
+  box-shadow: var(--shadow-book);
+  background: #fff;
+}
+.bf-covers-named {
+  justify-content: flex-start;
+  margin: 1rem 0 1.5rem;
+}
+.bf-covers figure {
+  margin: 0;
+}
+.bf-covers figcaption {
+  margin-top: 0.45rem;
+  font-weight: 800;
+}
+.bf-countdown {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  margin: 0.75rem 0 0;
+}

@@ -75,7 +75,9 @@ final class Config
             'BOOK_PRODUCT_PATH' => '/assets/img/book-product.png',
             'AUTHOR_PHOTO_PATH' => '',
             'GA_MEASUREMENT_ID' => 'G-D2TE99HQZQ',
-            'META_PIXEL_ID' => '',
+            'META_PIXEL_ID' => '882449387955199',
+            'BLACKFRIDAY_START' => '2026-11-19',
+            'BLACKFRIDAY_END' => '2026-11-30',
             'META_CAPI_ACCESS_TOKEN' => '',
             'META_CAPI_TEST_EVENT_CODE' => '',
         ];
@@ -530,7 +532,7 @@ final class Config
         return (int) $now->diff($target)->format('%r%a');
     }
 
-    private static function formatDutchDate(?\DateTimeImmutable $dt, bool $withWeekday): string
+    private static function formatDutchDate(?\DateTimeImmutable $dt, bool $withWeekday, bool $withYear = true): string
     {
         if (!$dt) {
             return '';
@@ -540,7 +542,10 @@ final class Config
             5 => 'mei', 6 => 'juni', 7 => 'juli', 8 => 'augustus',
             9 => 'september', 10 => 'oktober', 11 => 'november', 12 => 'december',
         ];
-        $short = (int) $dt->format('j') . ' ' . $months[(int) $dt->format('n')] . ' ' . $dt->format('Y');
+        $short = (int) $dt->format('j') . ' ' . $months[(int) $dt->format('n')];
+        if ($withYear) {
+            $short .= ' ' . $dt->format('Y');
+        }
         if (!$withWeekday) {
             return $short;
         }
@@ -569,5 +574,43 @@ final class Config
     public static function regularPriceFormatted(): string
     {
         return self::formatCents(self::regularPriceCents());
+    }
+
+    public static function blackFridayPromoCode(): string
+    {
+        return 'blackfriday_1plus1';
+    }
+
+    /** Actief van BLACKFRIDAY_START 00:00 t/m BLACKFRIDAY_END 23:59:59 (TIMEZONE). */
+    public static function isBlackFridayActive(?\DateTimeImmutable $now = null): bool
+    {
+        $tz = new \DateTimeZone(self::string('TIMEZONE', 'Europe/Amsterdam'));
+        $now = ($now ?? new \DateTimeImmutable('now', $tz))->setTimezone($tz);
+        $start = self::dateFromConfig('BLACKFRIDAY_START', '2026-11-19');
+        $end = self::dateFromConfig('BLACKFRIDAY_END', '2026-11-30');
+        if (!$start || !$end) {
+            return false;
+        }
+        $from = $start->setTime(0, 0, 0);
+        $until = $end->setTime(0, 0, 0)->modify('+1 day');
+        return $now >= $from && $now < $until;
+    }
+
+    /** Bijv. "nog t/m maandag 30 november". */
+    public static function blackFridayDeadlineText(): string
+    {
+        $end = self::dateFromConfig('BLACKFRIDAY_END', '2026-11-30');
+        $label = self::formatDutchDate($end, true, false);
+        return $label === '' ? 'nog t/m maandag 30 november' : 'nog t/m ' . $label;
+    }
+
+    /** Eerste moment ná de actie, voor de aftelling. */
+    public static function blackFridayEndsAtAtom(): string
+    {
+        $end = self::dateFromConfig('BLACKFRIDAY_END', '2026-11-30');
+        if (!$end) {
+            return '';
+        }
+        return $end->setTime(0, 0, 0)->modify('+1 day')->format(\DateTimeInterface::ATOM);
     }
 }

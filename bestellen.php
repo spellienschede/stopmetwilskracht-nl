@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use Grippartner\Config;
+use Grippartner\MetaCapi;
 use Grippartner\OrderService;
 use Grippartner\RateLimiter;
 use Grippartner\Security;
@@ -10,8 +11,23 @@ use Grippartner\View;
 
 require __DIR__ . '/src/bootstrap.php';
 
-if (Config::isActionSite()) {
-    redirect(Config::orderUrl());
+capture_campaign_attribution();
+MetaCapi::captureBrowserIds();
+
+$blackFridayRequested = (($_POST['actie'] ?? $_GET['actie'] ?? '') === 'blackfriday');
+$blackFridayLive = $blackFridayRequested && Config::isBlackFridayActive();
+$promoNotice = '';
+if ($blackFridayRequested && !$blackFridayLive) {
+    $promoNotice = 'De Black Friday-actie is afgelopen. Je bestelt nu 1 boek voor de normale prijs.';
+}
+
+if (Config::isActionSite() && !$blackFridayRequested) {
+    $target = Config::orderUrl();
+    $qs = $_SERVER['QUERY_STRING'] ?? '';
+    if (is_string($qs) && $qs !== '') {
+        $target .= (str_contains($target, '?') ? '&' : '?') . $qs;
+    }
+    redirect($target);
 }
 
 $errors = [];
@@ -25,7 +41,7 @@ $data = [
     'postal_code' => '',
     'city' => '',
     'country' => Config::string('DEFAULT_COUNTRY', 'NL'),
-    'quantity' => 1,
+    'quantity' => $blackFridayLive ? 2 : 1,
     'marketing_consent' => false,
     'terms' => false,
 ];
@@ -38,10 +54,25 @@ if (is_post()) {
     if (RateLimiter::tooMany('order:' . client_ip(), 10, 3600)) {
         $errors['form'] = 'Te veel pogingen. Probeer later opnieuw.';
     } else {
-        $data = Validator::normalizeOrderInput($_POST);
+        $post = $_POST;
+        if ($blackFridayLive) {
+            $post['quantity'] = 2;
+        } elseif ($blackFridayRequested) {
+            $post['quantity'] = 1;
+        }
+        $data = Validator::normalizeOrderInput($post);
         $data['country'] = 'NL';
-        $errors = Validator::order(array_merge($_POST, ['country' => 'NL']));
-        // Ignore client-side price manipulation: server calculates only
+        $data = array_merge($data, campaign_attribution_from_request($post));
+        if ($blackFridayLive) {
+            $data['actie'] = 'blackfriday';
+            $data['quantity'] = 2;
+        } else {
+            $data['actie'] = '';
+            if ($blackFridayRequested) {
+                $data['quantity'] = 1;
+            }
+        }
+        $errors = Validator::order(array_merge($post, ['country' => 'NL']));
         if ($errors === []) {
             try {
                 $order = OrderService::createPendingOrder($data);
@@ -61,14 +92,19 @@ if (is_post()) {
 }
 
 $countries = View::countries();
-unset($countries['OTHER']); // keep ISO-2 only
-$title = Config::orderCta() . ' – ' . Config::string('BOOK_TITLE');
-$description = 'Bestel het boek ' . Config::string('BOOK_TITLE') . '. ' . Config::priceFormatted() . ' incl. btw en verzending.';
+unset($countries['OTHER']);
+$utm = campaign_attribution_from_request($_GET);
+$payPrice = $blackFridayLive ? Config::regularPriceFormatted() : Config::priceFormatted();
+$title = ($blackFridayLive ? 'Bestel 1, ontvang 2' : Config::orderCta()) . ' – ' . Config::string('BOOK_TITLE');
+$description = $blackFridayLive
+    ? 'Black Friday: 2 boeken voor ' . Config::regularPriceFormatted() . ', inclusief btw en verzending.'
+    : 'Bestel het boek ' . Config::string('BOOK_TITLE') . '. ' . Config::priceFormatted() . ' incl. btw en verzending.';
 $canonical = Config::baseUrl() . '/bestellen.php';
-$noindex = false;
-// InitiateCheckout fires on confirm page after order exists (not on bare form view).
+$noindex = true;
 $metaPixelEvents = [];
-\Grippartner\MetaCapi::captureBrowserIds();
+$formAction = $blackFridayRequested ? '/bestellen.php?actie=blackfriday' : '/bestellen.php';
+$orderUrlOverride = $blackFridayLive ? $formAction : '';
+$navCtaLabel = $blackFridayLive ? 'Bestel 1, ontvang 2' : '';
 
 ob_start();
 ?>
@@ -77,27 +113,16 @@ ob_start();
   <div class="wrap">
     <div class="order-intro">
       <div class="order-intro-copy">
-        <h1><?= Config::isPresaleActive() ? 'Nu pre-orderen' : e(Config::orderCta()) ?></h1>
-        <?php if (Config::isPresaleActive()): ?>
-          <p class="lede">Je bent al bezig met groei — maar je plannen verwateren. Dit boek laat zien wat je mist. <strong><?= e(Config::priceFormatted()) ?></strong> i.p.v. <?= e(Config::regularPriceFormatted()) ?> · inclusief btw en verzending · <?= e(Config::availabilityText()) ?></p>
-          <?php
-            $countdown = Config::countdownLabel();
-            $presaleEndShort = Config::formatPresaleEndDateShort();
-          ?>
-          <div class="urgency-box">
-            <strong><?= e($countdown !== '' ? $countdown : 'Pre-order nu open') ?></strong>
-            <p>Tot <?= e($presaleEndShort) ?>: <strong>€ 10 korting</strong> én <strong>2 bonussen</strong>.</p>
-            <ol class="bonus-list">
-              <?php foreach (Config::presaleBonuses() as $bonus): ?>
-                <li>
-                  <strong><?= e($bonus['title']) ?></strong>
-                  <span><?= e($bonus['text']) ?></span>
-                </li>
-              <?php endforeach; ?>
-            </ol>
-          </div>
+        <?php if ($blackFridayLive): ?>
+          <h1>Bestel 1, ontvang 2</h1>
+          <p class="lede">Eén voor jou, één voor je grippartner. <strong><?= e(Config::regularPriceFormatted()) ?></strong> voor 2 boeken · inclusief btw en verzending · <?= e(Config::blackFridayDeadlineText()) ?></p>
         <?php else: ?>
-          <p class="lede"><?= e(Config::priceFormatted()) ?> per exemplaar · inclusief btw en verzending · <?= e(Config::availabilityText()) ?></p>
+          <h1><?= Config::isPresaleActive() ? 'Nu pre-orderen' : e(Config::orderCta()) ?></h1>
+          <?php if (Config::isPresaleActive()): ?>
+            <p class="lede">Je bent al bezig met groei — maar je plannen verwateren. Dit boek laat zien wat je mist. <strong><?= e(Config::priceFormatted()) ?></strong> i.p.v. <?= e(Config::regularPriceFormatted()) ?> · inclusief btw en verzending · <?= e(Config::availabilityText()) ?></p>
+          <?php else: ?>
+            <p class="lede"><?= e(Config::priceFormatted()) ?> per exemplaar · inclusief btw en verzending · <?= e(Config::availabilityText()) ?></p>
+          <?php endif; ?>
         <?php endif; ?>
       </div>
       <?php if ($orderCover !== ''): ?>
@@ -107,11 +132,22 @@ ob_start();
       <?php endif; ?>
     </div>
     <div class="form-card" style="margin-top:1.5rem">
+      <?php if ($promoNotice !== ''): ?>
+        <div class="status-box status-wait" role="status"><p><?= e($promoNotice) ?></p></div>
+      <?php endif; ?>
       <?php if ($errors): ?>
         <div class="errors" role="alert"><strong>Controleer het formulier</strong><ul><?php foreach ($errors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div>
       <?php endif; ?>
-      <form method="post" action="/bestellen.php" novalidate>
+      <form method="post" action="<?= e($formAction) ?>" novalidate>
         <?= Security::csrfField() ?>
+        <?php if ($blackFridayLive): ?>
+          <input type="hidden" name="actie" value="blackfriday">
+        <?php endif; ?>
+        <?php foreach ($utm as $utmKey => $utmVal): ?>
+          <?php if ($utmVal !== null): ?>
+            <input type="hidden" name="<?= e($utmKey) ?>" value="<?= e($utmVal) ?>">
+          <?php endif; ?>
+        <?php endforeach; ?>
         <div class="hp" aria-hidden="true"><label>Website<input type="text" name="website_url" tabindex="-1" autocomplete="off"></label></div>
         <div class="form-grid two">
           <label>Voornaam<input name="first_name" required maxlength="100" autocomplete="given-name" value="<?= e($data['first_name']) ?>"></label>
@@ -138,16 +174,25 @@ ob_start();
           </label>
         </div>
         <div class="form-grid" style="margin-top:0.95rem">
-          <label>Aantal exemplaren
-            <input type="number" name="quantity" min="1" max="50" required value="<?= (int) $data['quantity'] ?>" id="order-qty">
-          </label>
+          <?php if ($blackFridayLive): ?>
+            <p><strong>Aantal:</strong> 2 boeken, voor de prijs van 1.</p>
+            <input type="hidden" name="quantity" value="2">
+          <?php elseif ($blackFridayRequested): ?>
+            <p><strong>Aantal:</strong> 1 boek.</p>
+            <input type="hidden" name="quantity" value="1">
+          <?php else: ?>
+            <label>Aantal exemplaren
+              <input type="number" name="quantity" min="1" max="50" required value="<?= (int) $data['quantity'] ?>" id="order-qty">
+            </label>
+          <?php endif; ?>
         </div>
-        <p class="muted" style="margin-top:0.75rem">Totaal: <strong id="order-total"><?= e(Config::priceFormatted()) ?></strong> (incl. btw en verzending)</p>
-        <p style="margin-top:1.25rem"><button class="btn btn-primary btn-lg" type="submit">Doorgaan naar betaling — <?= e(Config::priceFormatted()) ?></button></p>
+        <p class="muted" style="margin-top:0.75rem">Totaal: <strong id="order-total"><?= e($payPrice) ?></strong> (incl. btw en verzending)</p>
+        <p style="margin-top:1.25rem"><button class="btn btn-primary btn-lg" type="submit"><?= $blackFridayLive ? 'Doorgaan naar betaling — ' . e(Config::regularPriceFormatted()) . ' voor 2 boeken' : 'Doorgaan naar betaling — ' . e(Config::priceFormatted()) ?></button></p>
       </form>
     </div>
   </div>
 </section>
+<?php if (!$blackFridayRequested): ?>
 <script>
 (() => {
   const qty = document.getElementById('order-qty');
@@ -163,6 +208,7 @@ ob_start();
   refresh();
 })();
 </script>
+<?php endif; ?>
 <?php
 $content = ob_get_clean();
 $hideMobileCta = true;

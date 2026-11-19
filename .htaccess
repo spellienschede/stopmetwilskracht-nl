@@ -15,6 +15,7 @@ DirectoryIndex index.php index.html
   RewriteRule ^media/?$ /media.php [L]
   RewriteRule ^webinar/(bedankt|agenda)/?$ /webinar.php [L,QSA]
   RewriteRule ^webinar/?$ /webinar.php [L,QSA]
+  RewriteRule ^blackfriday/?$ /blackfriday.php [L,QSA]
   RewriteRule ^ads-webinar/ - [E=ads_webinar:1]
   RewriteRule ^sessie/([a-z0-9\-]+)/?$ /sessie.php?slug=$1 [L,QSA]
 </IfModule>

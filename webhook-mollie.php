@@ -1,18 +1,13 @@
 <?php
 declare(strict_types=1);
 
-use Grippartner\Config;
 use Grippartner\Logger;
 use Grippartner\OrderService;
 
 require __DIR__ . '/src/bootstrap.php';
 
-if (Config::isActionSite()) {
-    http_response_code(404);
-    header('X-Robots-Tag: noindex, nofollow');
-    echo 'disabled';
-    exit;
-}
+// Black Friday-bestellingen worden op deze site afgerekend. De webhook
+// hoort bij de betaling die hier is aangemaakt, niet bij grippartner.nl.
 
 // Mollie stuurt id via POST
 $paymentId = trim((string) ($_POST['id'] ?? ''));

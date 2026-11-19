@@ -8,13 +8,13 @@ use Grippartner\Security;
 
 require __DIR__ . '/src/bootstrap.php';
 
-if (Config::isActionSite()) {
-    redirect(Config::orderUrl());
-}
-
 MetaCapi::captureBrowserIds();
+capture_campaign_attribution();
 
 $orderId = (int) ($_SESSION['checkout_order_id'] ?? 0);
+if (Config::isActionSite() && $orderId === 0) {
+    redirect(Config::orderUrl());
+}
 $order = $orderId ? OrderService::findById($orderId) : null;
 if (!$order || $order['payment_status'] !== OrderService::PAYMENT_PENDING) {
     redirect('/bestellen.php');
@@ -55,8 +55,9 @@ if (is_post()) {
             $error = 'Betaling kon niet worden gestart. Probeer het opnieuw of mail info@kornepot.nl.';
         }
     } elseif ($action === 'edit') {
+        $backToBlackFriday = OrderService::isBlackFridayOrder($order);
         unset($_SESSION['checkout_order_id']);
-        redirect('/bestellen.php');
+        redirect($backToBlackFriday ? '/bestellen.php?actie=blackfriday' : '/bestellen.php');
     }
 }
 
@@ -64,17 +65,32 @@ $title = 'Controleer je bestelling';
 $description = 'Controleer je bestelling vóór betaling.';
 $canonical = Config::baseUrl() . '/bestelling-bevestigen.php';
 $noindex = true;
+$commerce = OrderService::commercePayload($order);
+$isBlackFriday = OrderService::isBlackFridayOrder($order);
 $metaPixelEvents = [[
     'InitiateCheckout',
     [
-        'content_name' => Config::string('BOOK_TITLE'),
-        'content_ids' => ['stop-met-wilskracht'],
+        'content_name' => $commerce['content_name'],
+        'content_ids' => $commerce['content_ids'],
         'content_type' => 'product',
-        'value' => ((int) $order['total_cents']) / 100,
-        'currency' => Config::string('BOOK_CURRENCY'),
-        'num_items' => max(1, (int) $order['quantity']),
+        'value' => $commerce['value'],
+        'currency' => $commerce['currency'],
+        'num_items' => $commerce['num_items'],
     ],
     $icEventId,
+]];
+$gaEvents = [[
+    'begin_checkout',
+    [
+        'currency' => $commerce['currency'],
+        'value' => $commerce['value'],
+        'items' => [[
+            'item_id' => 'stop-met-wilskracht',
+            'item_name' => $commerce['content_name'],
+            'quantity' => $commerce['num_items'],
+            'price' => $commerce['item_price'],
+        ]],
+    ],
 ]];
 
 ob_start();
@@ -85,10 +101,16 @@ ob_start();
     <?php if ($error): ?><div class="errors" role="alert"><?= e($error) ?></div><?php endif; ?>
     <div class="form-card">
       <p><strong>Bestelnummer:</strong> <?= e($order['public_order_number']) ?></p>
-      <p><strong>Aantal:</strong> <?= (int) $order['quantity'] ?> × <?= money_cents((int) $order['unit_price_cents']) ?></p>
-      <p><strong>Totaal:</strong> <?= money_cents((int) $order['total_cents']) ?> (incl. btw en verzending)</p>
+      <?php if ($isBlackFriday): ?>
+        <p><strong>Black Friday-actie: 2 boeken voor de prijs van 1.</strong> Eén voor jou, één voor je grippartner. Beide gaan in dezelfde zending.</p>
+        <p><strong>Aantal:</strong> 2 boeken</p>
+        <p><strong>Te betalen:</strong> <?= money_cents((int) $order['total_cents']) ?> (incl. btw en verzending)</p>
+      <?php else: ?>
+        <p><strong>Aantal:</strong> <?= (int) $order['quantity'] ?> × <?= money_cents((int) $order['unit_price_cents']) ?></p>
+        <p><strong>Totaal:</strong> <?= money_cents((int) $order['total_cents']) ?> (incl. btw en verzending)</p>
+      <?php endif; ?>
       <p><strong>Verwacht:</strong> <?= e(Config::availabilityText()) ?></p>
-      <?php if (Config::isPresaleActive()): ?>
+      <?php if (Config::isPresaleActive() && !$isBlackFriday): ?>
         <p class="bonus-note"><?= e(Config::presaleBonusText()) ?></p>
       <?php endif; ?>
       <p><strong>Afleveradres</strong><br><?= nl2br(e(OrderService::formatAddress($order))) ?></p>
